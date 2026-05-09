@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Spinner Scorekeeper",
+    "slug": "spinner-scorekeeper",
+    "scheme": "spinner-scorekeeper",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1e293b"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.spinnerscorekeeper.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1e293b"
+      },
+      "package": "com.spinnerscorekeeper.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d1ad039f-1ca1-458b-a53a-bb5f7a525f45"
+      }
+    },
+    "owner": "andresamd"
+  }
+}
