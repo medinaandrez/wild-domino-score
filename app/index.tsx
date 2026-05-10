@@ -1,5 +1,4 @@
-import { router, useRootNavigationState } from "expo-router";
-import { useEffect } from "react";
+import { router } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useGame } from "@/lib/GameContext";
 import { useSettings } from "@/lib/SettingsContext";
@@ -10,14 +9,6 @@ export default function HomeScreen() {
   const { game, loading } = useGame();
   const { isDark, t } = useTheme();
   const { s } = useSettings();
-  const navState = useRootNavigationState();
-
-  useEffect(() => {
-    if (!navState?.key) return;
-    if (!loading && game && !isGameOver(game)) {
-      router.replace("/game");
-    }
-  }, [loading, game, navState?.key]);
 
   if (loading) {
     return (
