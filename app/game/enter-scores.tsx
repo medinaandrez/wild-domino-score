@@ -75,11 +75,11 @@ export default function EnterScoresScreen() {
         {game.players.map((player) => (
           <View key={player.id} style={[st.card, { backgroundColor: t.card }]}>
             <Text style={[st.playerName, { color: t.text }]}>{player.name}</Text>
-            <View style={st.inputRow}>
-              {/* Wrap in View so flex:1 works reliably on web */}
-              <View style={st.inputWrap}>
+            {isWeb ? (
+              /* Web: stack vertically to avoid horizontal overflow */
+              <View style={st.inputColWeb}>
                 <TextInput
-                  style={[st.input, { backgroundColor: t.cardAlt, color: t.text }]}
+                  style={[st.inputWeb, { backgroundColor: t.cardAlt, color: t.text }]}
                   placeholder="0"
                   placeholderTextColor={t.muted}
                   value={inputs[player.id]}
@@ -87,17 +87,38 @@ export default function EnterScoresScreen() {
                   keyboardType="number-pad"
                   returnKeyType="done"
                 />
+                <TouchableOpacity
+                  style={st.wonBtnWeb}
+                  onPress={() => setInputs((prev) => ({ ...prev, [player.id]: "0" }))}
+                >
+                  <Text style={{ color: colors.green, fontWeight: "700", fontSize: 15 }}>{s.won}</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={st.wonBtn}
-                onPress={() => {
-                  if (settings.hapticEnabled && !isWeb) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setInputs((prev) => ({ ...prev, [player.id]: "0" }));
-                }}
-              >
-                <Text style={{ color: colors.green, fontWeight: "700", fontSize: 15 }}>{s.won}</Text>
-              </TouchableOpacity>
-            </View>
+            ) : (
+              /* Native: side by side */
+              <View style={st.inputRow}>
+                <View style={st.inputWrap}>
+                  <TextInput
+                    style={[st.input, { backgroundColor: t.cardAlt, color: t.text }]}
+                    placeholder="0"
+                    placeholderTextColor={t.muted}
+                    value={inputs[player.id]}
+                    onChangeText={(v) => updateInput(player.id, v)}
+                    keyboardType="number-pad"
+                    returnKeyType="done"
+                  />
+                </View>
+                <TouchableOpacity
+                  style={st.wonBtn}
+                  onPress={() => {
+                    if (settings.hapticEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setInputs((prev) => ({ ...prev, [player.id]: "0" }));
+                  }}
+                >
+                  <Text style={{ color: colors.green, fontWeight: "700", fontSize: 15 }}>{s.won}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         ))}
 
@@ -109,7 +130,7 @@ export default function EnterScoresScreen() {
   );
 
   if (isWeb) {
-    return <View style={[st.flex, { backgroundColor: t.bg }]}>{content}</View>;
+    return <View style={[st.flex, { backgroundColor: t.bg, width: "100%" }]}>{content}</View>;
   }
 
   return (
@@ -125,19 +146,24 @@ export default function EnterScoresScreen() {
 const st = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { padding: 20, gap: 14, paddingBottom: 40 },
-  scrollWeb: { flexGrow: 1 },
-  webInner: { width: "100%", maxWidth: 600, alignSelf: "center" as const, gap: 14 },
+  scrollWeb: { padding: 20, paddingBottom: 40, maxWidth: 600, width: "100%", alignSelf: "center" as const },
+  webInner: {},
   roundBanner: { backgroundColor: colors.amber, borderRadius: 20, paddingHorizontal: 20, paddingVertical: 18, alignItems: "center" },
   roundTitle: { color: "#1e293b", fontSize: 20, fontWeight: "900" },
   roundSub: { color: "#334155", fontSize: 13, marginTop: 4, opacity: 0.8 },
   hint: { flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 14, padding: 14 },
   hintText: { flex: 1, fontSize: 14, lineHeight: 22 },
-  card: { borderRadius: 18, padding: 16 },
+  card: { borderRadius: 18, padding: 16, marginBottom: 14 },
   playerName: { fontSize: 18, fontWeight: "600", marginBottom: 12 },
+  // Native layout
   inputRow: { flexDirection: "row", gap: 10, alignItems: "stretch" },
   inputWrap: { flex: 1 },
   input: { borderRadius: 14, paddingHorizontal: 16, paddingVertical: 16, fontSize: 26, fontWeight: "700", textAlign: "center", width: "100%" },
   wonBtn: { backgroundColor: colors.greenLight, borderWidth: 1, borderColor: "rgba(34,197,94,0.3)", borderRadius: 14, paddingHorizontal: 20, paddingVertical: 16, justifyContent: "center", alignItems: "center" },
+  // Web layout
+  inputColWeb: { gap: 10 },
+  inputWeb: { borderRadius: 14, paddingHorizontal: 16, paddingVertical: 16, fontSize: 26, fontWeight: "700", textAlign: "center" as const },
+  wonBtnWeb: { backgroundColor: colors.greenLight, borderWidth: 1, borderColor: "rgba(34,197,94,0.3)", borderRadius: 14, paddingVertical: 14, alignItems: "center" },
   confirmBtn: { backgroundColor: colors.amber, borderRadius: 18, paddingVertical: 18, alignItems: "center", marginTop: 8 },
   confirmBtnText: { color: "#1e293b", fontSize: 20, fontWeight: "700" },
 });
