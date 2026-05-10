@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import * as Sharing from "expo-sharing";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, {
   FadeInDown, FadeInUp,
   useAnimatedStyle, useSharedValue,
@@ -98,6 +98,35 @@ function WinnerBanner({ name, label, score }: { name: string; label: string; sco
   );
 }
 
+function RankingContent({ ranking, t, s }: { ranking: ReturnType<typeof getRanking>; t: any; s: any }) {
+  return (
+    <View style={{ backgroundColor: t.bg, padding: 4, gap: 12 }}>
+      <WinnerBanner
+        name={ranking[0].player.name}
+        label={s.wonGame}
+        score={`${ranking[0].total} ${s.pts}`}
+      />
+      <Animated.Text entering={FadeInDown.delay(300).springify()} style={[st.sectionTitle, { color: t.text }]}>
+        {s.finalRanking}
+      </Animated.Text>
+      {ranking.map((item, i) => (
+        <Animated.View
+          key={item.player.id}
+          entering={FadeInDown.delay(400 + i * 100).springify()}
+          style={[st.rankCard, { backgroundColor: t.card }]}
+        >
+          <View style={st.rankLeft}>
+            <Text style={st.medal}>{MEDALS[i] ?? `${i + 1}.`}</Text>
+            <Text style={[st.rankName, { color: t.text }]}>{item.player.name}</Text>
+          </View>
+          <Text style={[st.rankScore, { color: i === 0 ? colors.amber : t.muted }]}>{item.total}</Text>
+        </Animated.View>
+      ))}
+      <Text style={[st.brand, { color: t.muted }]}>{s.brandName}</Text>
+    </View>
+  );
+}
+
 export default function ResultsScreen() {
   const { game, abandonGame } = useGame();
   const { t } = useTheme();
@@ -123,6 +152,16 @@ export default function ResultsScreen() {
   }
 
   async function handleShare() {
+    if (Platform.OS === "web") {
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: s.brandName, text: `${winner.player.name} ${s.wonGame}` });
+        } else {
+          Alert.alert(s.shareUnavailableTitle, s.shareUnavailableMsg);
+        }
+      } catch { /* user cancelled */ }
+      return;
+    }
     if (!viewShotRef.current?.capture) return;
     try {
       setSharing(true);
@@ -146,44 +185,21 @@ export default function ResultsScreen() {
   return (
     <View style={[st.flex, { backgroundColor: t.bg }]}>
 
-      {/* Confetti layer — rendered above everything, pointer-events none */}
+      {/* Confetti layer */}
       <View style={st.confettiContainer} pointerEvents="none">
         {PIECES.map((p) => <ConfettiPiece key={p.id} {...p} />)}
       </View>
 
       <ScrollView contentContainerStyle={st.scroll}>
 
-        {/* Captured area */}
-        <ViewShot ref={viewShotRef} options={{ format: "png", quality: 1 }}>
-          <View style={{ backgroundColor: t.bg, padding: 4, gap: 12 }}>
-
-            <WinnerBanner
-              name={winner.player.name}
-              label={s.wonGame}
-              score={`${winner.total} ${s.pts}`}
-            />
-
-            <Animated.Text entering={FadeInDown.delay(300).springify()} style={[st.sectionTitle, { color: t.text }]}>
-              {s.finalRanking}
-            </Animated.Text>
-
-            {ranking.map((item, i) => (
-              <Animated.View
-                key={item.player.id}
-                entering={FadeInDown.delay(400 + i * 100).springify()}
-                style={[st.rankCard, { backgroundColor: t.card }]}
-              >
-                <View style={st.rankLeft}>
-                  <Text style={st.medal}>{MEDALS[i] ?? `${i + 1}.`}</Text>
-                  <Text style={[st.rankName, { color: t.text }]}>{item.player.name}</Text>
-                </View>
-                <Text style={[st.rankScore, { color: i === 0 ? colors.amber : t.muted }]}>{item.total}</Text>
-              </Animated.View>
-            ))}
-
-            <Text style={[st.brand, { color: t.muted }]}>{s.brandName}</Text>
-          </View>
-        </ViewShot>
+        {/* Captured area — ViewShot only on native */}
+        {Platform.OS !== "web" ? (
+          <ViewShot ref={viewShotRef} options={{ format: "png", quality: 1 }}>
+            <RankingContent ranking={ranking} t={t} s={s} />
+          </ViewShot>
+        ) : (
+          <RankingContent ranking={ranking} t={t} s={s} />
+        )}
 
         {/* Actions */}
         <Animated.View entering={FadeInUp.delay(600).springify()} style={st.actions}>

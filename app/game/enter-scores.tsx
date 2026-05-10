@@ -43,10 +43,10 @@ export default function EnterScoresScreen() {
     }));
     await submitRound(scores);
     if (isLastRound) {
-      if (settings.hapticEnabled) await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (settings.hapticEnabled && Platform.OS !== "web") await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace("/results");
     } else {
-      if (settings.hapticEnabled) await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      if (settings.hapticEnabled && Platform.OS !== "web") await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       router.back();
     }
   }
@@ -85,7 +85,7 @@ export default function EnterScoresScreen() {
               <TouchableOpacity
                 style={st.wonBtn}
                 onPress={() => {
-                  if (settings.hapticEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  if (settings.hapticEnabled && Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setInputs((prev) => ({ ...prev, [player.id]: "0" }));
                 }}
               >

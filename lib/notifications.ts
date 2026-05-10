@@ -1,24 +1,31 @@
-import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 import { loadSettings } from "./settings";
 
 const REMINDER_ID = "game-reminder";
 const REMINDER_SECONDS = 2 * 60 * 60; // 2 hours
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+if (Platform.OS !== "web") {
+  const Notifications = require("expo-notifications");
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 export async function requestNotificationPermission(): Promise<boolean> {
+  if (Platform.OS === "web") return false;
+  const Notifications = require("expo-notifications");
   const { status } = await Notifications.requestPermissionsAsync();
   return status === "granted";
 }
 
 export async function scheduleGameReminder(): Promise<void> {
+  if (Platform.OS === "web") return;
   try {
+    const Notifications = require("expo-notifications");
     const { status } = await Notifications.getPermissionsAsync();
     if (status !== "granted") return;
 
@@ -46,7 +53,9 @@ export async function scheduleGameReminder(): Promise<void> {
 }
 
 export async function cancelGameReminder(): Promise<void> {
+  if (Platform.OS === "web") return;
   try {
+    const Notifications = require("expo-notifications");
     await Notifications.cancelScheduledNotificationAsync(REMINDER_ID);
   } catch {
     // ignore

@@ -13,6 +13,7 @@
     "submit:android": "eas submit --platform android"
   },
   "dependencies": {
+    "@expo/metro-runtime": "^6.1.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "^54.0.34",
     "expo-asset": "~12.0.13",
