@@ -5,7 +5,7 @@ const es = {
   cancel: "Cancelar",
   loading: "🎲 Cargando…",
   // Nav titles
-  navHome: "Spinner Scorekeeper",
+  navHome: "Wild Domino Score",
   navNewGame: "Nueva partida",
   navScoreboard: "Marcador",
   navEnterScores: "Ingresar puntos",
@@ -73,7 +73,7 @@ const es = {
   shareErrorMsg: "No se pudo capturar la imagen.",
   newGameBtn: "Nueva partida",
   goHome: "Ir al inicio",
-  brandName: "Spinner Scorekeeper",
+  brandName: "Wild Domino Score",
   // History
   noGames: "Sin partidas guardadas",
   noGamesHint: "Las partidas terminadas aparecerán aquí",
@@ -111,6 +111,7 @@ const es = {
   hapticsHint: "Al terminar una ronda o anunciar ganador",
   informationSection: "Información",
   versionLabel: "Versión",
+  authorLabel: "Autor",
   rulesLinkLabel: "Reglas del juego",
   // Rules
   rulesHeader: "Reglas del Spinner",
@@ -162,7 +163,7 @@ const es = {
 const en: typeof es = {
   cancel: "Cancel",
   loading: "🎲 Loading…",
-  navHome: "Spinner Scorekeeper",
+  navHome: "Wild Domino Score",
   navNewGame: "New game",
   navScoreboard: "Scoreboard",
   navEnterScores: "Enter scores",
@@ -225,7 +226,7 @@ const en: typeof es = {
   shareErrorMsg: "Could not capture the image.",
   newGameBtn: "New game",
   goHome: "Go home",
-  brandName: "Spinner Scorekeeper",
+  brandName: "Wild Domino Score",
   noGames: "No saved games",
   noGamesHint: "Finished games will appear here",
   gameCount: (n: number) => `${n} game${n !== 1 ? "s" : ""}`,
@@ -261,6 +262,7 @@ const en: typeof es = {
   hapticsHint: "When a round ends or a winner is announced",
   informationSection: "Information",
   versionLabel: "Version",
+  authorLabel: "Author",
   rulesLinkLabel: "Game rules",
   rulesHeader: "Spinner Rules",
   rulesSubHeader: "Texas Wild Domino Game",

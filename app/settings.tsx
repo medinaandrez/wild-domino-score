@@ -4,7 +4,8 @@ import { useSettings } from "@/lib/SettingsContext";
 import { colors, useTheme } from "@/lib/theme";
 import { Language, RoundCount } from "@/lib/settings";
 
-const APP_VERSION = "1.0";
+const APP_VERSION = "1.1.0";
+const APP_AUTHOR = "Andrés Medina";
 
 function InlinePicker<T extends string | number>({
   options, value, onChange, t,
@@ -173,6 +174,13 @@ export default function SettingsScreen() {
           <View style={st.row}>
             <Text style={[st.rowLabel, { color: t.text }]}>{s.versionLabel}</Text>
             <Text style={[st.rowValue, { color: t.muted }]}>{APP_VERSION}</Text>
+          </View>
+
+          <View style={[st.divider, { backgroundColor: t.border }]} />
+
+          <View style={st.row}>
+            <Text style={[st.rowLabel, { color: t.text }]}>{s.authorLabel}</Text>
+            <Text style={[st.rowValue, { color: t.muted }]}>{APP_AUTHOR}</Text>
           </View>
 
           <View style={[st.divider, { backgroundColor: t.border }]} />
