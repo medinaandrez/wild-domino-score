@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Wild Domino Score",
-    "slug": "wild-domino-score",
+    "slug": "spinner-scorekeeper",
     "scheme": "wild-domino-score",
     "version": "1.1.0",
     "orientation": "portrait",
