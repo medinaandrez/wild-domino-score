@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
-import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useGame } from "@/lib/GameContext";
 import { useSettings } from "@/lib/SettingsContext";
 import {
@@ -47,12 +47,15 @@ const wd = StyleSheet.create({
 });
 
 type PendingConfirm = { message: string; onConfirm: () => void; label: string } | null;
+type EditTarget = { roundNumber: number; playerId: string; playerName: string; currentPoints: number } | null;
 
 export default function ScoreboardScreen() {
-  const { game, undoLastRound, finishGame, abandonGame } = useGame();
+  const { game, undoLastRound, editRoundScore, finishGame, abandonGame } = useGame();
   const { isDark, t } = useTheme();
   const { s } = useSettings();
   const [pending, setPending] = useState<PendingConfirm>(null);
+  const [editTarget, setEditTarget] = useState<EditTarget>(null);
+  const [editValue, setEditValue] = useState("");
 
   useEffect(() => {
     if (game && isGameOver(game)) router.replace("/results");
@@ -123,6 +126,43 @@ export default function ScoreboardScreen() {
         t={t}
       />
 
+      {/* Edit score modal */}
+      {editTarget && (
+        <View style={wd.overlay}>
+          <View style={[wd.card, { backgroundColor: t.card }]}>
+            <Text style={[{ fontSize: 17, fontWeight: "700", color: t.text, textAlign: "center", marginBottom: 4 }]}>
+              {s.editRoundTitle(editTarget.roundNumber, editTarget.playerName)}
+            </Text>
+            <Text style={[{ fontSize: 13, color: t.muted, textAlign: "center", marginBottom: 16 }]}>
+              {s.editRoundLabel}
+            </Text>
+            <TextInput
+              style={[{ backgroundColor: t.cardAlt, color: t.text, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 28, fontWeight: "700", textAlign: "center", marginBottom: 16 }]}
+              value={editValue}
+              onChangeText={(v) => { if (/^\d*$/.test(v)) setEditValue(v); }}
+              keyboardType="number-pad"
+              autoFocus
+              selectTextOnFocus
+            />
+            <View style={wd.row}>
+              <TouchableOpacity style={[wd.btn, { backgroundColor: t.cardAlt }]} onPress={() => setEditTarget(null)}>
+                <Text style={[wd.btnText, { color: t.text }]}>{s.cancel}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[wd.btn, { backgroundColor: colors.amber }]}
+                onPress={() => {
+                  const pts = parseInt(editValue, 10);
+                  if (!isNaN(pts)) editRoundScore(editTarget.roundNumber, editTarget.playerId, pts);
+                  setEditTarget(null);
+                }}
+              >
+                <Text style={[wd.btnText, { color: "#1e293b" }]}>{s.save}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
       {/* Round header */}
       <View style={st.roundHeader}>
         <Text style={st.roundTitle}>{currentLabel}</Text>
@@ -176,12 +216,23 @@ export default function ScoreboardScreen() {
                     const round = game.rounds.find((cr) => cr.roundNumber === r);
                     const pts = round ? getScoreForRound(round, player.id) : undefined;
                     const isCurrent = r === game.currentRound;
+                    const isEditable = pts !== undefined;
                     return (
-                      <View key={r} style={[st.roundCell, { backgroundColor: isCurrent ? colors.amberLight : "transparent", borderColor: t.border }]}>
+                      <TouchableOpacity
+                        key={r}
+                        style={[st.roundCell, { backgroundColor: isCurrent ? colors.amberLight : "transparent", borderColor: t.border }]}
+                        onPress={() => {
+                          if (!isEditable) return;
+                          setEditValue(String(pts));
+                          setEditTarget({ roundNumber: r, playerId: player.id, playerName: player.name, currentPoints: pts! });
+                        }}
+                        activeOpacity={isEditable ? 0.6 : 1}
+                      >
                         {pts !== undefined
                           ? <Text style={[st.scoreText, { color: pts === 0 ? colors.green : t.text }]}>{pts}</Text>
                           : <Text style={{ color: t.muted }}>—</Text>}
-                      </View>
+                        {isEditable && <Text style={{ fontSize: 8, color: t.muted, marginTop: 2 }}>✏️</Text>}
+                      </TouchableOpacity>
                     );
                   })}
                   <View style={[st.totalCell, { backgroundColor: colors.amberLight }]}>

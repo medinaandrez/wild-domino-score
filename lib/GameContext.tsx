@@ -25,6 +25,7 @@ interface GameContextValue {
   startGame: (playerNames: string[], totalRounds: number) => Promise<void>;
   submitRound: (scores: RoundScore[]) => Promise<void>;
   undoLastRound: () => Promise<void>;
+  editRoundScore: (roundNumber: number, playerId: string, points: number) => Promise<void>;
   finishGame: () => Promise<void>;
   abandonGame: () => Promise<void>;
   loading: boolean;
@@ -66,6 +67,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     [game]
   );
 
+  const editRoundScore = useCallback(async (roundNumber: number, playerId: string, points: number) => {
+    if (!game) return;
+    const updatedRounds = game.rounds.map((round) => {
+      if (round.roundNumber !== roundNumber) return round;
+      return {
+        ...round,
+        scores: round.scores.map((s) =>
+          s.playerId === playerId ? { ...s, points } : s
+        ),
+      };
+    });
+    const updated = { ...game, rounds: updatedRounds };
+    setGame(updated);
+    await saveCurrentGame(updated);
+  }, [game]);
+
   const undoLastRound = useCallback(async () => {
     if (!game || game.rounds.length === 0) return;
     const updatedRounds = game.rounds.slice(0, -1);
@@ -98,7 +115,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <GameContext.Provider value={{ game, startGame, submitRound, undoLastRound, finishGame, abandonGame, loading }}>
+    <GameContext.Provider value={{ game, startGame, submitRound, undoLastRound, editRoundScore, finishGame, abandonGame, loading }}>
       {children}
     </GameContext.Provider>
   );
