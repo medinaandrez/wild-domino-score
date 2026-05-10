@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useGame } from "@/lib/GameContext";
 import { useSettings } from "@/lib/SettingsContext";
 import {
@@ -141,18 +141,26 @@ export default function ScoreboardScreen() {
               value={editValue}
               onChangeText={(v) => { if (/^\d*$/.test(v)) setEditValue(v); }}
               keyboardType="number-pad"
+              returnKeyType="done"
               autoFocus
               selectTextOnFocus
+              onSubmitEditing={() => {
+                Keyboard.dismiss();
+                const pts = parseInt(editValue, 10);
+                if (!isNaN(pts)) editRoundScore(editTarget!.roundNumber, editTarget!.playerId, pts);
+                setEditTarget(null);
+              }}
             />
             <View style={wd.row}>
-              <TouchableOpacity style={[wd.btn, { backgroundColor: t.cardAlt }]} onPress={() => setEditTarget(null)}>
+              <TouchableOpacity style={[wd.btn, { backgroundColor: t.cardAlt }]} onPress={() => { Keyboard.dismiss(); setEditTarget(null); }}>
                 <Text style={[wd.btnText, { color: t.text }]}>{s.cancel}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[wd.btn, { backgroundColor: colors.amber }]}
                 onPress={() => {
+                  Keyboard.dismiss();
                   const pts = parseInt(editValue, 10);
-                  if (!isNaN(pts)) editRoundScore(editTarget.roundNumber, editTarget.playerId, pts);
+                  if (!isNaN(pts)) editRoundScore(editTarget!.roundNumber, editTarget!.playerId, pts);
                   setEditTarget(null);
                 }}
               >
