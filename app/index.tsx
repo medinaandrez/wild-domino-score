@@ -24,8 +24,8 @@ export default function HomeScreen() {
     <View style={[st.container, { backgroundColor: t.bg }]}>
       <View style={st.logoBlock}>
         <Text style={st.logoEmoji}>🎲</Text>
-        <Text style={[st.logoTitle, { color: colors.amber }]}>Spinner</Text>
-        <Text style={[st.logoSub, { color: t.muted }]}>Scorekeeper</Text>
+        <Text style={[st.logoTitle, { color: colors.amber }]}>Wild Domino</Text>
+        <Text style={[st.logoSub, { color: t.muted }]}>Game Score</Text>
         <Text style={[st.logoTag, { color: t.muted }]}>Texas Wild Domino Game</Text>
       </View>
 
