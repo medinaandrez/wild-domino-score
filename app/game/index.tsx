@@ -22,7 +22,7 @@ export default function ScoreboardScreen() {
   if (!game) return null;
 
   const leader = getLeader(game);
-  const rounds = Array.from({ length: game.totalRounds }, (_, i) => i + 1);
+  const rounds = Array.from({ length: game.currentRound }, (_, i) => i + 1);
 
   const sortedPlayers = game.rounds.length > 0
     ? [...game.players].sort((a, b) => getTotalScore(game, a.id) - getTotalScore(game, b.id))
