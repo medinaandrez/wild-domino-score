@@ -11,7 +11,11 @@ export async function saveCurrentGame(game: Game): Promise<void> {
 
 export async function loadCurrentGame(): Promise<Game | null> {
   const raw = await AsyncStorage.getItem(CURRENT_GAME_KEY);
-  return raw ? (JSON.parse(raw) as Game) : null;
+  if (!raw) return null;
+  const game = JSON.parse(raw) as Game;
+  // Migration: older saves won't have totalRounds
+  if (!game.totalRounds) game.totalRounds = 10;
+  return game;
 }
 
 export async function clearCurrentGame(): Promise<void> {

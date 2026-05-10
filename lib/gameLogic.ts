@@ -4,7 +4,7 @@ export const TOTAL_ROUNDS = 10;
 export const DOUBLE_OPENERS = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
 export const SPINNER_TILE_VALUE = 10;
 
-export function createGame(playerNames: string[]): Game {
+export function createGame(playerNames: string[], totalRounds: number = TOTAL_ROUNDS): Game {
   const players: Player[] = playerNames.map((name, i) => ({
     id: String(i),
     name: name.trim(),
@@ -15,6 +15,7 @@ export function createGame(playerNames: string[]): Game {
     players,
     rounds: [],
     currentRound: 1,
+    totalRounds,
   };
 }
 
@@ -53,12 +54,12 @@ export function addRound(game: Game, scores: RoundScore[]): Game {
     rounds: updatedRounds,
     currentRound: nextRound,
     finishedAt:
-      nextRound > TOTAL_ROUNDS ? new Date().toISOString() : undefined,
+      nextRound > game.totalRounds ? new Date().toISOString() : undefined,
   };
 }
 
 export function isGameOver(game: Game): boolean {
-  return game.currentRound > TOTAL_ROUNDS;
+  return game.currentRound > game.totalRounds;
 }
 
 export function getRanking(game: Game): { player: Player; total: number }[] {

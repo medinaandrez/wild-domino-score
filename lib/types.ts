@@ -20,7 +20,8 @@ export interface Game {
   finishedAt?: string;
   players: Player[];
   rounds: Round[];
-  currentRound: number; // 1-based, 11 = game over
+  currentRound: number; // 1-based, totalRounds+1 = game over
+  totalRounds: number;  // 5, 7, or 10
 }
 
 export interface SavedGame {

@@ -1,17 +1,20 @@
 import { router } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { useEffect, useState } from "react";
 import {
   Alert, KeyboardAvoidingView, Platform, ScrollView,
   StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from "react-native";
 import { useGame } from "@/lib/GameContext";
-import { SPINNER_TILE_VALUE, TOTAL_ROUNDS, getRoundLabel } from "@/lib/gameLogic";
+import { useSettings } from "@/lib/SettingsContext";
+import { SPINNER_TILE_VALUE } from "@/lib/gameLogic";
 import { RoundScore } from "@/lib/types";
 import { colors, useTheme } from "@/lib/theme";
 
 export default function EnterScoresScreen() {
   const { game, submitRound } = useGame();
   const { t } = useTheme();
+  const { s, settings } = useSettings();
 
   const [inputs, setInputs] = useState<Record<string, string>>(
     Object.fromEntries(game?.players.map((p) => [p.id, ""]) ?? [])
@@ -30,47 +33,48 @@ export default function EnterScoresScreen() {
   async function handleSubmit() {
     const allFilled = game!.players.every((p) => inputs[p.id].trim() !== "");
     if (!allFilled) {
-      Alert.alert("Campos incompletos", "Ingresa los puntos de todos los jugadores. El ganador ingresa 0.");
+      Alert.alert(s.incompleteTitle, s.incompleteMsg);
       return;
     }
-    const isLastRound = game!.currentRound === TOTAL_ROUNDS;
+    const isLastRound = game!.currentRound === game!.totalRounds;
     const scores: RoundScore[] = game!.players.map((p) => ({
       playerId: p.id,
       points: parseInt(inputs[p.id] || "0", 10) || 0,
     }));
     await submitRound(scores);
     if (isLastRound) {
+      if (settings.hapticEnabled) await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace("/results");
     } else {
+      if (settings.hapticEnabled) await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       router.back();
     }
   }
 
+  const roundLabel = s.roundLabel(game.currentRound, game.totalRounds - game.currentRound + 1);
+
   return (
-    <KeyboardAvoidingView style={[s.flex, { backgroundColor: t.bg }]} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView style={[st.flex, { backgroundColor: t.bg }]} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <ScrollView contentContainerStyle={st.scroll} keyboardShouldPersistTaps="handled">
         {/* Round label */}
-        <View style={s.roundBanner}>
-          <Text style={s.roundTitle}>{getRoundLabel(game.currentRound)}</Text>
-          <Text style={s.roundSub}>El ganador de la ronda ingresa 0</Text>
+        <View style={st.roundBanner}>
+          <Text style={st.roundTitle}>{s.roundLabel(game.currentRound, game.totalRounds - game.currentRound)}</Text>
+          <Text style={st.roundSub}>{s.roundWinnerNote}</Text>
         </View>
 
         {/* Spinner hint */}
-        <View style={[s.hint, { backgroundColor: t.card }]}>
+        <View style={[st.hint, { backgroundColor: t.card }]}>
           <Text style={{ fontSize: 22 }}>🃏</Text>
-          <Text style={[s.hintText, { color: t.muted }]}>
-            Las fichas Spinner que queden en mano valen{" "}
-            <Text style={{ fontWeight: "700", color: colors.amber }}>{SPINNER_TILE_VALUE} puntos</Text> cada una.
-          </Text>
+          <Text style={[st.hintText, { color: t.muted }]}>{s.spinnerNote(SPINNER_TILE_VALUE)}</Text>
         </View>
 
         {/* Player inputs */}
         {game.players.map((player) => (
-          <View key={player.id} style={[s.card, { backgroundColor: t.card }]}>
-            <Text style={[s.playerName, { color: t.text }]}>{player.name}</Text>
-            <View style={s.inputRow}>
+          <View key={player.id} style={[st.card, { backgroundColor: t.card }]}>
+            <Text style={[st.playerName, { color: t.text }]}>{player.name}</Text>
+            <View style={st.inputRow}>
               <TextInput
-                style={[s.input, { backgroundColor: t.cardAlt, color: t.text }]}
+                style={[st.input, { backgroundColor: t.cardAlt, color: t.text }]}
                 placeholder="0"
                 placeholderTextColor={t.muted}
                 value={inputs[player.id]}
@@ -79,24 +83,27 @@ export default function EnterScoresScreen() {
                 returnKeyType="done"
               />
               <TouchableOpacity
-                style={s.wonBtn}
-                onPress={() => setInputs((prev) => ({ ...prev, [player.id]: "0" }))}
+                style={st.wonBtn}
+                onPress={() => {
+                  if (settings.hapticEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setInputs((prev) => ({ ...prev, [player.id]: "0" }));
+                }}
               >
-                <Text style={{ color: colors.green, fontWeight: "700", fontSize: 15 }}>🏆 Ganó</Text>
+                <Text style={{ color: colors.green, fontWeight: "700", fontSize: 15 }}>{s.won}</Text>
               </TouchableOpacity>
             </View>
           </View>
         ))}
 
-        <TouchableOpacity style={s.confirmBtn} onPress={handleSubmit} activeOpacity={0.8}>
-          <Text style={s.confirmBtnText}>Confirmar puntos</Text>
+        <TouchableOpacity style={st.confirmBtn} onPress={handleSubmit} activeOpacity={0.8}>
+          <Text style={st.confirmBtnText}>{s.confirmPoints}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const s = StyleSheet.create({
+const st = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { padding: 20, gap: 14, paddingBottom: 40 },
   roundBanner: { backgroundColor: colors.amber, borderRadius: 20, paddingHorizontal: 20, paddingVertical: 18, alignItems: "center" },

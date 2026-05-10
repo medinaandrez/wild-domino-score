@@ -1,17 +1,110 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import * as Sharing from "expo-sharing";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated, {
+  FadeInDown, FadeInUp,
+  useAnimatedStyle, useSharedValue,
+  withDelay, withRepeat, withSequence, withSpring, withTiming,
+} from "react-native-reanimated";
+import ViewShot from "react-native-view-shot";
 import { useGame } from "@/lib/GameContext";
+import { useSettings } from "@/lib/SettingsContext";
 import { getRanking } from "@/lib/gameLogic";
 import { saveGameToHistory } from "@/lib/storage";
 import { colors, useTheme } from "@/lib/theme";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
+const { width: SW, height: SH } = Dimensions.get("window");
+
+const CONFETTI_COLORS = [
+  colors.amber, colors.cyan, colors.green,
+  "#a855f7", "#ec4899", "#f97316",
+];
+
+const PIECES = Array.from({ length: 28 }, (_, i) => ({
+  id: i,
+  x: Math.random() * SW,
+  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+  size: 7 + Math.random() * 7,
+  delay: Math.random() * 600,
+  duration: 2000 + Math.random() * 1200,
+  rotate: Math.random() * 360,
+}));
+
+function ConfettiPiece({ x, color, size, delay, duration, rotate }: typeof PIECES[0]) {
+  const translateY = useSharedValue(-20);
+  const opacity = useSharedValue(0);
+  const rot = useSharedValue(rotate);
+
+  useEffect(() => {
+    translateY.value = withDelay(delay, withTiming(SH * 0.75, { duration }));
+    opacity.value = withDelay(delay, withSequence(
+      withTiming(1, { duration: 200 }),
+      withDelay(duration - 500, withTiming(0, { duration: 500 })),
+    ));
+    rot.value = withDelay(delay, withTiming(rotate + 360 * 3, { duration }));
+  }, []);
+
+  const style = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }, { rotate: `${rot.value}deg` }],
+    opacity: opacity.value,
+  }));
+
+  const isCircle = Math.random() > 0.5;
+
+  return (
+    <Animated.View
+      style={[
+        st.confettiPiece,
+        style,
+        {
+          left: x,
+          width: size,
+          height: isCircle ? size : size * 1.6,
+          backgroundColor: color,
+          borderRadius: isCircle ? size : 2,
+        },
+      ]}
+    />
+  );
+}
+
+function WinnerBanner({ name, label, score }: { name: string; label: string; score: string }) {
+  const scale = useSharedValue(0.5);
+  const bounce = useSharedValue(1);
+
+  useEffect(() => {
+    scale.value = withSpring(1, { damping: 10, stiffness: 120 });
+    bounce.value = withDelay(400, withRepeat(
+      withSequence(
+        withSpring(1.04, { damping: 8 }),
+        withSpring(1, { damping: 8 }),
+      ), 3, false
+    ));
+  }, []);
+
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value * bounce.value }],
+  }));
+
+  return (
+    <Animated.View style={[st.winnerBanner, style]}>
+      <Text style={{ fontSize: 52, marginBottom: 6 }}>🏆</Text>
+      <Text style={st.winnerName}>{name}</Text>
+      <Text style={st.winnerLabel}>{label}</Text>
+      <Text style={st.winnerScore}>{score}</Text>
+    </Animated.View>
+  );
+}
 
 export default function ResultsScreen() {
   const { game, abandonGame } = useGame();
   const { t } = useTheme();
+  const { s } = useSettings();
   const [saved, setSaved] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const viewShotRef = useRef<ViewShot>(null);
 
   useEffect(() => {
     if (!game) router.replace("/");
@@ -26,63 +119,107 @@ export default function ResultsScreen() {
     if (saved) return;
     await saveGameToHistory(game!);
     setSaved(true);
-    Alert.alert("Guardado", "La partida se guardó en el historial.");
+    Alert.alert(s.savedTitle, s.savedMsg);
+  }
+
+  async function handleShare() {
+    if (!viewShotRef.current?.capture) return;
+    try {
+      setSharing(true);
+      const uri = await viewShotRef.current.capture();
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(uri, { mimeType: "image/png", dialogTitle: s.shareResults });
+      } else {
+        Alert.alert(s.shareUnavailableTitle, s.shareUnavailableMsg);
+      }
+    } catch {
+      Alert.alert(s.shareErrorTitle, s.shareErrorMsg);
+    } finally {
+      setSharing(false);
+    }
   }
 
   async function handleNewGame() { await abandonGame(); router.replace("/new-game"); }
   async function handleHome() { await abandonGame(); router.replace("/"); }
 
   return (
-    <View style={[s.flex, { backgroundColor: t.bg }]}>
-      <ScrollView contentContainerStyle={s.scroll}>
-        {/* Winner banner */}
-        <View style={s.winnerBanner}>
-          <Text style={{ fontSize: 52, marginBottom: 6 }}>🏆</Text>
-          <Text style={s.winnerName}>{winner.player.name}</Text>
-          <Text style={s.winnerLabel}>¡Ganó la partida!</Text>
-          <Text style={s.winnerScore}>{winner.total} pts</Text>
-        </View>
+    <View style={[st.flex, { backgroundColor: t.bg }]}>
 
-        <Text style={[s.sectionTitle, { color: t.text }]}>Clasificación final</Text>
+      {/* Confetti layer — rendered above everything, pointer-events none */}
+      <View style={st.confettiContainer} pointerEvents="none">
+        {PIECES.map((p) => <ConfettiPiece key={p.id} {...p} />)}
+      </View>
 
-        {ranking.map((item, i) => (
-          <View key={item.player.id} style={[s.rankCard, { backgroundColor: t.card }]}>
-            <View style={s.rankLeft}>
-              <Text style={s.medal}>{MEDALS[i] ?? `${i + 1}.`}</Text>
-              <Text style={[s.rankName, { color: t.text }]}>{item.player.name}</Text>
-            </View>
-            <Text style={[s.rankScore, { color: i === 0 ? colors.amber : t.muted }]}>{item.total}</Text>
+      <ScrollView contentContainerStyle={st.scroll}>
+
+        {/* Captured area */}
+        <ViewShot ref={viewShotRef} options={{ format: "png", quality: 1 }}>
+          <View style={{ backgroundColor: t.bg, padding: 4, gap: 12 }}>
+
+            <WinnerBanner
+              name={winner.player.name}
+              label={s.wonGame}
+              score={`${winner.total} ${s.pts}`}
+            />
+
+            <Animated.Text entering={FadeInDown.delay(300).springify()} style={[st.sectionTitle, { color: t.text }]}>
+              {s.finalRanking}
+            </Animated.Text>
+
+            {ranking.map((item, i) => (
+              <Animated.View
+                key={item.player.id}
+                entering={FadeInDown.delay(400 + i * 100).springify()}
+                style={[st.rankCard, { backgroundColor: t.card }]}
+              >
+                <View style={st.rankLeft}>
+                  <Text style={st.medal}>{MEDALS[i] ?? `${i + 1}.`}</Text>
+                  <Text style={[st.rankName, { color: t.text }]}>{item.player.name}</Text>
+                </View>
+                <Text style={[st.rankScore, { color: i === 0 ? colors.amber : t.muted }]}>{item.total}</Text>
+              </Animated.View>
+            ))}
+
+            <Text style={[st.brand, { color: t.muted }]}>{s.brandName}</Text>
           </View>
-        ))}
+        </ViewShot>
 
-        <View style={s.actions}>
+        {/* Actions */}
+        <Animated.View entering={FadeInUp.delay(600).springify()} style={st.actions}>
+          <TouchableOpacity style={[st.btn, { backgroundColor: colors.green }]} onPress={handleShare} activeOpacity={0.8} disabled={sharing}>
+            <Text style={[st.btnText, { color: "#fff" }]}>{sharing ? s.generatingImage : s.shareResults}</Text>
+          </TouchableOpacity>
+
           {!saved ? (
-            <TouchableOpacity style={[s.btn, { backgroundColor: colors.cyan }]} onPress={handleSave} activeOpacity={0.8}>
-              <Text style={[s.btnText, { color: "#fff" }]}>Guardar en historial</Text>
+            <TouchableOpacity style={[st.btn, { backgroundColor: colors.cyan }]} onPress={handleSave} activeOpacity={0.8}>
+              <Text style={[st.btnText, { color: "#fff" }]}>{s.saveToHistory}</Text>
             </TouchableOpacity>
           ) : (
-            <View style={s.savedBadge}>
-              <Text style={{ color: colors.green, fontSize: 17, fontWeight: "600" }}>✓ Guardado en historial</Text>
+            <View style={st.savedBadge}>
+              <Text style={{ color: colors.green, fontSize: 17, fontWeight: "600" }}>{s.savedToHistory}</Text>
             </View>
           )}
 
-          <TouchableOpacity style={[s.btn, { backgroundColor: colors.amber }]} onPress={handleNewGame} activeOpacity={0.8}>
-            <Text style={[s.btnText, { color: "#1e293b" }]}>Nueva partida</Text>
+          <TouchableOpacity style={[st.btn, { backgroundColor: colors.amber }]} onPress={handleNewGame} activeOpacity={0.8}>
+            <Text style={[st.btnText, { color: "#1e293b" }]}>{s.newGameBtn}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[s.btn, { backgroundColor: t.card, borderWidth: 1.5, borderColor: t.border }]} onPress={handleHome} activeOpacity={0.75}>
-            <Text style={[s.btnText, { color: t.text }]}>Ir al inicio</Text>
+          <TouchableOpacity style={[st.btn, { backgroundColor: t.card, borderWidth: 1.5, borderColor: t.border }]} onPress={handleHome} activeOpacity={0.75}>
+            <Text style={[st.btnText, { color: t.text }]}>{s.goHome}</Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );
 }
 
-const s = StyleSheet.create({
+const st = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { padding: 20, paddingBottom: 40, gap: 12 },
-  winnerBanner: { backgroundColor: colors.amber, borderRadius: 24, padding: 28, alignItems: "center", marginBottom: 8 },
+  confettiContainer: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10 },
+  confettiPiece: { position: "absolute", top: 0 },
+  winnerBanner: { backgroundColor: colors.amber, borderRadius: 24, padding: 28, alignItems: "center" },
   winnerName: { color: "#1e293b", fontSize: 30, fontWeight: "900" },
   winnerLabel: { color: "#334155", fontSize: 17, fontWeight: "600", marginTop: 4 },
   winnerScore: { color: "#1e293b", fontSize: 40, fontWeight: "900", marginTop: 10 },
@@ -92,7 +229,8 @@ const s = StyleSheet.create({
   medal: { fontSize: 30, width: 40, textAlign: "center" },
   rankName: { fontSize: 20, fontWeight: "700" },
   rankScore: { fontSize: 22, fontWeight: "900" },
-  actions: { gap: 12, marginTop: 8 },
+  brand: { textAlign: "center", fontSize: 13, paddingVertical: 8 },
+  actions: { gap: 12, marginTop: 4 },
   btn: { borderRadius: 18, paddingVertical: 18, alignItems: "center" },
   btnText: { fontSize: 20, fontWeight: "700" },
   savedBadge: { backgroundColor: colors.greenLight, borderWidth: 1, borderColor: "rgba(34,197,94,0.3)", borderRadius: 18, paddingVertical: 16, alignItems: "center" },

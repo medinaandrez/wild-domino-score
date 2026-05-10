@@ -1,15 +1,23 @@
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import { TouchableOpacity, Text } from "react-native";
 import { GameProvider } from "@/lib/GameContext";
-import { useColorScheme } from "react-native";
-import { colors } from "@/lib/theme";
+import { SettingsProvider } from "@/lib/SettingsContext";
+import { useSettings } from "@/lib/SettingsContext";
+import { requestNotificationPermission } from "@/lib/notifications";
+import { colors, useTheme } from "@/lib/theme";
 
-export default function RootLayout() {
-  const isDark = useColorScheme() === "dark";
-  const t = isDark ? colors.dark : colors.light;
+function AppNavigator() {
+  const { isDark, t } = useTheme();
+  const { s } = useSettings();
+
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
 
   return (
-    <GameProvider>
+    <>
       <StatusBar style={isDark ? "light" : "dark"} />
       <Stack
         screenOptions={{
@@ -18,14 +26,35 @@ export default function RootLayout() {
           headerTitleStyle: { fontWeight: "700", fontSize: 18 },
         }}
       >
-        <Stack.Screen name="index" options={{ title: "Spinner Scorekeeper" }} />
-        <Stack.Screen name="new-game" options={{ title: "Nueva partida" }} />
-        <Stack.Screen name="game/index" options={{ title: "Marcador", headerBackVisible: false }} />
-        <Stack.Screen name="game/enter-scores" options={{ title: "Ingresar puntos" }} />
-        <Stack.Screen name="results" options={{ title: "Resultados finales", headerBackVisible: false }} />
-        <Stack.Screen name="history" options={{ title: "Historial" }} />
-        <Stack.Screen name="rules" options={{ title: "Reglas del juego" }} />
+        <Stack.Screen
+          name="index"
+          options={{
+            title: s.navHome,
+            headerRight: () => (
+              <TouchableOpacity onPress={() => router.push("/settings")} style={{ marginRight: 4, padding: 4 }}>
+                <Text style={{ fontSize: 22 }}>⚙️</Text>
+              </TouchableOpacity>
+            ),
+          }}
+        />
+        <Stack.Screen name="new-game" options={{ title: s.navNewGame }} />
+        <Stack.Screen name="game/index" options={{ title: s.navScoreboard, headerBackVisible: false }} />
+        <Stack.Screen name="game/enter-scores" options={{ title: s.navEnterScores }} />
+        <Stack.Screen name="results" options={{ title: s.navResults, headerBackVisible: false }} />
+        <Stack.Screen name="history" options={{ title: s.navHistory }} />
+        <Stack.Screen name="rules" options={{ title: s.navRules }} />
+        <Stack.Screen name="settings" options={{ title: s.navSettings }} />
       </Stack>
-    </GameProvider>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <SettingsProvider>
+      <GameProvider>
+        <AppNavigator />
+      </GameProvider>
+    </SettingsProvider>
   );
 }

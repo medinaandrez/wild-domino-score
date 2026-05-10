@@ -2,16 +2,18 @@ import { router, useRootNavigationState } from "expo-router";
 import { useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useGame } from "@/lib/GameContext";
+import { useSettings } from "@/lib/SettingsContext";
 import { isGameOver } from "@/lib/gameLogic";
 import { colors, useTheme } from "@/lib/theme";
 
 export default function HomeScreen() {
   const { game, loading } = useGame();
   const { isDark, t } = useTheme();
+  const { s } = useSettings();
   const navState = useRootNavigationState();
 
   useEffect(() => {
-    if (!navState?.key) return; // navigator not ready yet
+    if (!navState?.key) return;
     if (!loading && game && !isGameOver(game)) {
       router.replace("/game");
     }
@@ -19,47 +21,47 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={[s.center, { backgroundColor: t.bg }]}>
+      <View style={[st.center, { backgroundColor: t.bg }]}>
         <Text style={{ color: colors.amber, fontSize: 22, fontWeight: "600" }}>
-          🎲 Cargando…
+          {s.loading}
         </Text>
       </View>
     );
   }
 
   return (
-    <View style={[s.container, { backgroundColor: t.bg }]}>
-      <View style={s.logoBlock}>
-        <Text style={s.logoEmoji}>🎲</Text>
-        <Text style={[s.logoTitle, { color: colors.amber }]}>Spinner</Text>
-        <Text style={[s.logoSub, { color: t.muted }]}>Scorekeeper</Text>
-        <Text style={[s.logoTag, { color: t.muted }]}>Texas Wild Domino Game</Text>
+    <View style={[st.container, { backgroundColor: t.bg }]}>
+      <View style={st.logoBlock}>
+        <Text style={st.logoEmoji}>🎲</Text>
+        <Text style={[st.logoTitle, { color: colors.amber }]}>Spinner</Text>
+        <Text style={[st.logoSub, { color: t.muted }]}>Scorekeeper</Text>
+        <Text style={[st.logoTag, { color: t.muted }]}>Texas Wild Domino Game</Text>
       </View>
 
-      <View style={s.buttons}>
-        <TouchableOpacity style={s.btnPrimary} onPress={() => router.push("/new-game")} activeOpacity={0.8}>
-          <Text style={s.btnPrimaryText}>Nueva partida</Text>
+      <View style={st.buttons}>
+        <TouchableOpacity style={st.btnPrimary} onPress={() => router.push("/new-game")} activeOpacity={0.8}>
+          <Text style={st.btnPrimaryText}>{s.newGame}</Text>
         </TouchableOpacity>
 
         {game && !isGameOver(game) && (
-          <TouchableOpacity style={[s.btnSecondary, { backgroundColor: colors.cyan }]} onPress={() => router.push("/game")} activeOpacity={0.8}>
-            <Text style={[s.btnSecondaryText, { color: "#fff" }]}>Continuar partida</Text>
+          <TouchableOpacity style={[st.btnSecondary, { backgroundColor: colors.cyan }]} onPress={() => router.push("/game")} activeOpacity={0.8}>
+            <Text style={[st.btnSecondaryText, { color: "#fff" }]}>{s.continueGame}</Text>
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={[s.btnOutline, { backgroundColor: t.card, borderColor: t.border }]} onPress={() => router.push("/history")} activeOpacity={0.75}>
-          <Text style={[s.btnOutlineText, { color: t.text }]}>Historial</Text>
+        <TouchableOpacity style={[st.btnOutline, { backgroundColor: t.card, borderColor: t.border }]} onPress={() => router.push("/history")} activeOpacity={0.75}>
+          <Text style={[st.btnOutlineText, { color: t.text }]}>{s.history}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[s.btnOutline, { backgroundColor: t.card, borderColor: t.border }]} onPress={() => router.push("/rules")} activeOpacity={0.75}>
-          <Text style={[s.btnOutlineText, { color: t.text }]}>Reglas del juego</Text>
+        <TouchableOpacity style={[st.btnOutline, { backgroundColor: t.card, borderColor: t.border }]} onPress={() => router.push("/rules")} activeOpacity={0.75}>
+          <Text style={[st.btnOutlineText, { color: t.text }]}>{s.rulesTitle}</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-const s = StyleSheet.create({
+const st = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   container: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24, gap: 8 },
   logoBlock: { alignItems: "center", marginBottom: 24 },

@@ -5,6 +5,7 @@ import {
   StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from "react-native";
 import { useGame } from "@/lib/GameContext";
+import { useSettings } from "@/lib/SettingsContext";
 import { colors, useTheme } from "@/lib/theme";
 
 const MIN_PLAYERS = 2;
@@ -13,6 +14,7 @@ const MAX_PLAYERS = 8;
 export default function NewGameScreen() {
   const { startGame } = useGame();
   const { t } = useTheme();
+  const { s, settings } = useSettings();
   const [players, setPlayers] = useState(["", ""]);
 
   function updatePlayer(i: number, v: string) {
@@ -30,31 +32,31 @@ export default function NewGameScreen() {
   async function handleStart() {
     const names = players.map((p) => p.trim()).filter(Boolean);
     if (names.length < MIN_PLAYERS) {
-      Alert.alert("Faltan jugadores", "Ingresa al menos 2 nombres.");
+      Alert.alert(s.missingPlayers, s.missingPlayersMsg);
       return;
     }
     if (new Set(names.map((n) => n.toLowerCase())).size !== names.length) {
-      Alert.alert("Nombres repetidos", "Cada jugador debe tener un nombre único.");
+      Alert.alert(s.duplicateNames, s.duplicateNamesMsg);
       return;
     }
-    await startGame(names);
+    await startGame(names, settings.rounds ?? 10);
     router.replace("/game");
   }
 
   return (
-    <KeyboardAvoidingView style={[s.flex, { backgroundColor: t.bg }]} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={[s.title, { color: t.text }]}>Jugadores</Text>
-        <Text style={[s.hint, { color: t.muted }]}>Entre {MIN_PLAYERS} y {MAX_PLAYERS} jugadores</Text>
+    <KeyboardAvoidingView style={[st.flex, { backgroundColor: t.bg }]} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <ScrollView contentContainerStyle={st.scroll} keyboardShouldPersistTaps="handled">
+        <Text style={[st.title, { color: t.text }]}>{s.players}</Text>
+        <Text style={[st.hint, { color: t.muted }]}>{s.playersHint(MIN_PLAYERS, MAX_PLAYERS)}</Text>
 
         {players.map((name, i) => (
-          <View key={i} style={s.row}>
-            <View style={s.badge}>
-              <Text style={s.badgeText}>{i + 1}</Text>
+          <View key={i} style={st.row}>
+            <View style={st.badge}>
+              <Text style={st.badgeText}>{i + 1}</Text>
             </View>
             <TextInput
-              style={[s.input, { backgroundColor: t.cardAlt, color: t.text }]}
-              placeholder={`Jugador ${i + 1}`}
+              style={[st.input, { backgroundColor: t.cardAlt, color: t.text }]}
+              placeholder={s.playerPlaceholder(i + 1)}
               placeholderTextColor={t.muted}
               value={name}
               onChangeText={(v) => updatePlayer(i, v)}
@@ -62,28 +64,28 @@ export default function NewGameScreen() {
               returnKeyType="next"
             />
             {players.length > MIN_PLAYERS && (
-              <TouchableOpacity style={s.removeBtn} onPress={() => removePlayer(i)}>
-                <Text style={s.removeBtnText}>×</Text>
+              <TouchableOpacity style={st.removeBtn} onPress={() => removePlayer(i)}>
+                <Text style={st.removeBtnText}>×</Text>
               </TouchableOpacity>
             )}
           </View>
         ))}
 
         {players.length < MAX_PLAYERS && (
-          <TouchableOpacity style={[s.addBtn, { borderColor: t.border }]} onPress={addPlayer}>
-            <Text style={{ color: colors.amber, fontSize: 18, fontWeight: "600" }}>+ Agregar jugador</Text>
+          <TouchableOpacity style={[st.addBtn, { borderColor: t.border }]} onPress={addPlayer}>
+            <Text style={{ color: colors.amber, fontSize: 18, fontWeight: "600" }}>{s.addPlayer}</Text>
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={s.startBtn} onPress={handleStart} activeOpacity={0.8}>
-          <Text style={s.startBtnText}>¡Comenzar partida!</Text>
+        <TouchableOpacity style={st.startBtn} onPress={handleStart} activeOpacity={0.8}>
+          <Text style={st.startBtnText}>{s.startGame}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const s = StyleSheet.create({
+const st = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { padding: 20, gap: 12, paddingBottom: 40 },
   title: { fontSize: 24, fontWeight: "700", marginBottom: 4 },
