@@ -177,8 +177,8 @@ export default function ScoreboardScreen() {
         <Text style={st.roundSub}>{s.roundOf(game.currentRound, game.totalRounds)}</Text>
       </View>
 
-      {/* Leader banner */}
-      {leader && (
+      {/* Leader banner — only show after at least one round is played */}
+      {leader && game.rounds.length > 0 && (
         <View style={st.leaderBanner}>
           <Text style={{ color: colors.green, fontSize: 15, fontWeight: "600" }}>
             {s.leading(leader.name, getTotalScore(game, leader.id))}
