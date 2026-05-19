@@ -14,12 +14,14 @@ import {
   clearCurrentGame,
   loadCurrentGame,
   saveCurrentGame,
+  saveFrequentPlayers,
 } from "./storage";
 import {
   cancelGameReminder,
   scheduleGameReminder,
 } from "./notifications";
 import { updateWidget } from "./widgetData";
+import { endLiveActivity, startLiveActivity, updateLiveActivity } from "./liveActivity";
 
 interface GameContextValue {
   game: Game | null;
@@ -27,6 +29,7 @@ interface GameContextValue {
   submitRound: (scores: RoundScore[]) => Promise<void>;
   undoLastRound: () => Promise<void>;
   editRoundScore: (roundNumber: number, playerId: string, points: number) => Promise<void>;
+  editPlayerName: (playerId: string, newName: string) => Promise<void>;
   finishGame: () => Promise<void>;
   abandonGame: () => Promise<void>;
   loading: boolean;
@@ -56,7 +59,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const newGame = createGame(playerNames, totalRounds);
     setGame(newGame);
     await saveCurrentGame(newGame);
+    saveFrequentPlayers(playerNames);
     updateWidget(newGame);
+    startLiveActivity(newGame);
     scheduleGameReminder();
   }, []);
 
@@ -67,6 +72,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setGame(updated);
       await saveCurrentGame(updated);
       updateWidget(updated);
+      updateLiveActivity(updated);
     },
     [game]
   );
@@ -86,6 +92,21 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setGame(updated);
     await saveCurrentGame(updated);
     updateWidget(updated);
+    updateLiveActivity(updated);
+  }, [game]);
+
+  const editPlayerName = useCallback(async (playerId: string, newName: string) => {
+    if (!game) return;
+    const updated: Game = {
+      ...game,
+      players: game.players.map((p) =>
+        p.id === playerId ? { ...p, name: newName.trim() } : p
+      ),
+    };
+    setGame(updated);
+    await saveCurrentGame(updated);
+    updateWidget(updated);
+    updateLiveActivity(updated);
   }, [game]);
 
   const undoLastRound = useCallback(async () => {
@@ -100,6 +121,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setGame(updated);
     await saveCurrentGame(updated);
     updateWidget(updated);
+    updateLiveActivity(updated);
   }, [game]);
 
   const finishGame = useCallback(async () => {
@@ -112,6 +134,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setGame(finished);
     await saveCurrentGame(finished);
     updateWidget(finished);
+    updateLiveActivity(finished, true);
     cancelGameReminder();
   }, [game]);
 
@@ -119,11 +142,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setGame(null);
     await clearCurrentGame();
     updateWidget(null);
+    endLiveActivity();
     cancelGameReminder();
   }, []);
 
   return (
-    <GameContext.Provider value={{ game, startGame, submitRound, undoLastRound, editRoundScore, finishGame, abandonGame, loading }}>
+    <GameContext.Provider value={{ game, startGame, submitRound, undoLastRound, editRoundScore, editPlayerName, finishGame, abandonGame, loading }}>
       {children}
     </GameContext.Provider>
   );
