@@ -58,7 +58,13 @@ const es = {
   incompleteTitle: "Campos incompletos",
   incompleteMsg: "Ingresa los puntos de todos los jugadores. El ganador ingresa 0.",
   won: "🏆 Ganó",
+  // Scoreboard — edit player name
+  editPlayerNameTitle: "Editar nombre",
+  editPlayerNameLabel: "Nuevo nombre del jugador",
+  // New game — frequent players
+  frequentPlayers: "Jugadores frecuentes",
   // Results
+  scoreProgress: "Progreso por ronda",
   wonGame: "¡Ganó la partida!",
   finalRanking: "Clasificación final",
   shareResults: "📸 Compartir resultados",
@@ -212,6 +218,10 @@ const en: typeof es = {
   incompleteTitle: "Incomplete fields",
   incompleteMsg: "Enter scores for all players. The winner enters 0.",
   won: "🏆 Won",
+  editPlayerNameTitle: "Edit name",
+  editPlayerNameLabel: "New player name",
+  frequentPlayers: "Frequent players",
+  scoreProgress: "Score progression",
   wonGame: "Won the game!",
   finalRanking: "Final ranking",
   shareResults: "📸 Share results",
