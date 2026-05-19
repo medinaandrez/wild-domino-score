@@ -47,3 +47,25 @@ export async function saveGameToHistory(game: Game): Promise<void> {
 export async function clearHistory(): Promise<void> {
   await AsyncStorage.removeItem(HISTORY_KEY);
 }
+
+const FREQUENT_PLAYERS_KEY = "spinner_frequent_players";
+const MAX_FREQUENT = 12;
+
+export async function loadFrequentPlayers(): Promise<string[]> {
+  try {
+    const raw = await AsyncStorage.getItem(FREQUENT_PLAYERS_KEY);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveFrequentPlayers(names: string[]): Promise<void> {
+  try {
+    const existing = await loadFrequentPlayers();
+    const merged = [...new Set([...names, ...existing])].slice(0, MAX_FREQUENT);
+    await AsyncStorage.setItem(FREQUENT_PLAYERS_KEY, JSON.stringify(merged));
+  } catch {
+    // ignore storage errors
+  }
+}

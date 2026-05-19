@@ -1,11 +1,12 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert, KeyboardAvoidingView, Platform, ScrollView,
   StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from "react-native";
 import { useGame } from "@/lib/GameContext";
 import { useSettings } from "@/lib/SettingsContext";
+import { loadFrequentPlayers } from "@/lib/storage";
 import { colors, useTheme } from "@/lib/theme";
 
 const MIN_PLAYERS = 2;
@@ -16,6 +17,11 @@ export default function NewGameScreen() {
   const { t } = useTheme();
   const { s, settings } = useSettings();
   const [players, setPlayers] = useState(["", ""]);
+  const [frequent, setFrequent] = useState<string[]>([]);
+
+  useEffect(() => {
+    loadFrequentPlayers().then(setFrequent);
+  }, []);
 
   function updatePlayer(i: number, v: string) {
     setPlayers((prev) => prev.map((p, idx) => (idx === i ? v : p)));
@@ -28,6 +34,18 @@ export default function NewGameScreen() {
   function removePlayer(i: number) {
     if (players.length > MIN_PLAYERS) setPlayers((p) => p.filter((_, idx) => idx !== i));
   }
+
+  function addFrequentPlayer(name: string) {
+    const emptyIdx = players.findIndex((p) => p.trim() === "");
+    if (emptyIdx !== -1) {
+      updatePlayer(emptyIdx, name);
+    } else if (players.length < MAX_PLAYERS) {
+      setPlayers((p) => [...p, name]);
+    }
+  }
+
+  const usedNames = new Set(players.map((p) => p.trim().toLowerCase()).filter(Boolean));
+  const suggestions = frequent.filter((n) => !usedNames.has(n.toLowerCase()));
 
   async function handleStart() {
     const names = players.map((p) => p.trim()).filter(Boolean);
@@ -71,6 +89,25 @@ export default function NewGameScreen() {
           </View>
         ))}
 
+        {/* Frequent player suggestions */}
+        {suggestions.length > 0 && (
+          <View style={st.suggestionsBlock}>
+            <Text style={[st.suggestionsLabel, { color: t.muted }]}>{s.frequentPlayers}</Text>
+            <View style={st.chips}>
+              {suggestions.map((name) => (
+                <TouchableOpacity
+                  key={name}
+                  style={[st.chip, { backgroundColor: t.cardAlt, borderColor: t.border }]}
+                  onPress={() => addFrequentPlayer(name)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[st.chipText, { color: t.text }]}>{name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
         {players.length < MAX_PLAYERS && (
           <TouchableOpacity style={[st.addBtn, { borderColor: t.border }]} onPress={addPlayer}>
             <Text style={{ color: colors.amber, fontSize: 18, fontWeight: "600" }}>{s.addPlayer}</Text>
@@ -99,4 +136,9 @@ const st = StyleSheet.create({
   addBtn: { borderWidth: 2, borderStyle: "dashed", borderRadius: 14, paddingVertical: 16, alignItems: "center", marginTop: 4 },
   startBtn: { backgroundColor: colors.amber, borderRadius: 18, paddingVertical: 18, alignItems: "center", marginTop: 20 },
   startBtnText: { color: "#1e293b", fontSize: 20, fontWeight: "700" },
+  suggestionsBlock: { gap: 8, marginTop: 4 },
+  suggestionsLabel: { fontSize: 12, fontWeight: "700", letterSpacing: 0.6, marginLeft: 2 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip: { borderRadius: 20, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 8 },
+  chipText: { fontSize: 15, fontWeight: "500" },
 });
