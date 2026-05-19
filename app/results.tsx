@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import * as Sharing from "expo-sharing";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Dimensions, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, LayoutChangeEvent, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import ScoreChart from "@/components/ScoreChart";
 import Animated, {
   FadeInDown, FadeInUp,
   useAnimatedStyle, useSharedValue,
@@ -98,7 +99,8 @@ function WinnerBanner({ name, label, score }: { name: string; label: string; sco
   );
 }
 
-function RankingContent({ ranking, t, s }: { ranking: ReturnType<typeof getRanking>; t: any; s: any }) {
+function RankingContent({ ranking, game, t, s }: { ranking: ReturnType<typeof getRanking>; game: any; t: any; s: any }) {
+  const [chartWidth, setChartWidth] = useState(0);
   return (
     <View style={{ backgroundColor: t.bg, padding: 4, gap: 12 }}>
       <WinnerBanner
@@ -122,6 +124,15 @@ function RankingContent({ ranking, t, s }: { ranking: ReturnType<typeof getRanki
           <Text style={[st.rankScore, { color: i === 0 ? colors.amber : t.muted }]}>{item.total}</Text>
         </Animated.View>
       ))}
+      {/* Score progression chart */}
+      <Animated.View
+        entering={FadeInDown.delay(400 + ranking.length * 100).springify()}
+        style={[st.chartCard, { backgroundColor: t.card }]}
+        onLayout={(e: LayoutChangeEvent) => setChartWidth(e.nativeEvent.layout.width - 24)}
+      >
+        <Text style={[st.sectionTitle, { color: t.text, marginBottom: 4 }]}>{s.scoreProgress}</Text>
+        <ScoreChart game={game} width={chartWidth} />
+      </Animated.View>
       <Text style={[st.brand, { color: t.muted }]}>{s.brandName}</Text>
     </View>
   );
@@ -195,10 +206,10 @@ export default function ResultsScreen() {
         {/* Captured area — ViewShot only on native */}
         {Platform.OS !== "web" ? (
           <ViewShot ref={viewShotRef} options={{ format: "png", quality: 1 }}>
-            <RankingContent ranking={ranking} t={t} s={s} />
+            <RankingContent ranking={ranking} game={game} t={t} s={s} />
           </ViewShot>
         ) : (
-          <RankingContent ranking={ranking} t={t} s={s} />
+          <RankingContent ranking={ranking} game={game} t={t} s={s} />
         )}
 
         {/* Actions */}
@@ -245,6 +256,7 @@ const st = StyleSheet.create({
   medal: { fontSize: 30, width: 40, textAlign: "center" },
   rankName: { fontSize: 20, fontWeight: "700" },
   rankScore: { fontSize: 22, fontWeight: "900" },
+  chartCard: { borderRadius: 18, padding: 12 },
   brand: { textAlign: "center", fontSize: 13, paddingVertical: 8 },
   actions: { gap: 12, marginTop: 4 },
   btn: { borderRadius: 18, paddingVertical: 18, alignItems: "center" },
