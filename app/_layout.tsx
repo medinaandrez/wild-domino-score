@@ -1,12 +1,13 @@
 import { router, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { TouchableOpacity, Text } from "react-native";
 import { GameProvider } from "@/lib/GameContext";
 import { SettingsProvider } from "@/lib/SettingsContext";
 import { useSettings } from "@/lib/SettingsContext";
 import { requestNotificationPermission } from "@/lib/notifications";
 import { colors, useTheme } from "@/lib/theme";
+import AnimatedSplash from "@/components/AnimatedSplash";
 
 function AppNavigator() {
   const { isDark, t } = useTheme();
@@ -50,10 +51,13 @@ function AppNavigator() {
 }
 
 export default function RootLayout() {
+  const [splashDone, setSplashDone] = useState(false);
+
   return (
     <SettingsProvider>
       <GameProvider>
         <AppNavigator />
+        {!splashDone && <AnimatedSplash onDone={() => setSplashDone(true)} />}
       </GameProvider>
     </SettingsProvider>
   );
