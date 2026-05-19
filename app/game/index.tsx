@@ -48,14 +48,17 @@ const wd = StyleSheet.create({
 
 type PendingConfirm = { message: string; onConfirm: () => void; label: string } | null;
 type EditTarget = { roundNumber: number; playerId: string; playerName: string; currentPoints: number } | null;
+type EditNameTarget = { playerId: string; currentName: string } | null;
 
 export default function ScoreboardScreen() {
-  const { game, undoLastRound, editRoundScore, finishGame, abandonGame } = useGame();
+  const { game, undoLastRound, editRoundScore, editPlayerName, finishGame, abandonGame } = useGame();
   const { isDark, t } = useTheme();
   const { s } = useSettings();
   const [pending, setPending] = useState<PendingConfirm>(null);
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [editValue, setEditValue] = useState("");
+  const [editNameTarget, setEditNameTarget] = useState<EditNameTarget>(null);
+  const [editNameValue, setEditNameValue] = useState("");
 
   useEffect(() => {
     if (game && isGameOver(game)) router.replace("/results");
@@ -171,6 +174,49 @@ export default function ScoreboardScreen() {
         </View>
       )}
 
+      {/* Edit player name modal */}
+      {editNameTarget && (
+        <View style={wd.overlay}>
+          <View style={[wd.card, { backgroundColor: t.card }]}>
+            <Text style={[{ fontSize: 17, fontWeight: "700", color: t.text, textAlign: "center", marginBottom: 4 }]}>
+              {s.editPlayerNameTitle}
+            </Text>
+            <Text style={[{ fontSize: 13, color: t.muted, textAlign: "center", marginBottom: 16 }]}>
+              {s.editPlayerNameLabel}
+            </Text>
+            <TextInput
+              style={[{ backgroundColor: t.cardAlt, color: t.text, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 22, fontWeight: "700", textAlign: "center", marginBottom: 16 }]}
+              value={editNameValue}
+              onChangeText={setEditNameValue}
+              autoCapitalize="words"
+              returnKeyType="done"
+              autoFocus
+              selectTextOnFocus
+              onSubmitEditing={() => {
+                Keyboard.dismiss();
+                if (editNameValue.trim()) editPlayerName(editNameTarget!.playerId, editNameValue);
+                setEditNameTarget(null);
+              }}
+            />
+            <View style={wd.row}>
+              <TouchableOpacity style={[wd.btn, { backgroundColor: t.cardAlt }]} onPress={() => { Keyboard.dismiss(); setEditNameTarget(null); }}>
+                <Text style={[wd.btnText, { color: t.text }]}>{s.cancel}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[wd.btn, { backgroundColor: colors.amber }]}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  if (editNameValue.trim()) editPlayerName(editNameTarget!.playerId, editNameValue);
+                  setEditNameTarget(null);
+                }}
+              >
+                <Text style={[wd.btnText, { color: "#1e293b" }]}>{s.save}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
       {/* Round header */}
       <View style={st.roundHeader}>
         <Text style={st.roundTitle}>{currentLabel}</Text>
@@ -215,11 +261,17 @@ export default function ScoreboardScreen() {
               const isLeading = leader?.id === player.id;
               return (
                 <View key={player.id} style={[st.tableRow, { backgroundColor: isLeading ? colors.greenLight : "transparent", borderBottomColor: t.border, borderBottomWidth: 1 }]}>
-                  <View style={[st.nameCell, { borderColor: t.border }]}>
+                  <TouchableOpacity
+                    style={[st.nameCell, { borderColor: t.border }]}
+                    onLongPress={() => { setEditNameValue(player.name); setEditNameTarget({ playerId: player.id, currentName: player.name }); }}
+                    activeOpacity={0.7}
+                    delayLongPress={500}
+                  >
                     <Text style={[st.playerName, { color: t.text }]} numberOfLines={1}>
                       {isLeading ? "🏆 " : ""}{player.name}
                     </Text>
-                  </View>
+                    <Text style={{ fontSize: 9, color: t.muted, marginTop: 2 }}>✏️</Text>
+                  </TouchableOpacity>
                   {rounds.map((r) => {
                     const round = game.rounds.find((cr) => cr.roundNumber === r);
                     const pts = round ? getScoreForRound(round, player.id) : undefined;
