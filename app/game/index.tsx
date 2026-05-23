@@ -1,50 +1,16 @@
 import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import { Alert, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useGame } from "@/lib/GameContext";
 import { useSettings } from "@/lib/SettingsContext";
 import {
-  getDoubleOpener, getLeader,
-  getScoreForRound, getTotalScore, isGameOver,
+  getDoubleOpener,
+  getRanking, getScoreForRound, isGameOver,
 } from "@/lib/gameLogic";
 import { colors, useTheme } from "@/lib/theme";
-
-// Non-blocking confirm dialog for web (replaces window.confirm)
-function WebConfirmDialog({ visible, message, onConfirm, onCancel, confirmLabel, cancelLabel, t }: {
-  visible: boolean;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  confirmLabel: string;
-  cancelLabel: string;
-  t: any;
-}) {
-  if (!visible) return null;
-  return (
-    <View style={wd.overlay}>
-      <View style={[wd.card, { backgroundColor: t.card }]}>
-        <Text style={[wd.msg, { color: t.text }]}>{message}</Text>
-        <View style={wd.row}>
-          <TouchableOpacity style={[wd.btn, { backgroundColor: t.cardAlt }]} onPress={onCancel}>
-            <Text style={[wd.btnText, { color: t.text }]}>{cancelLabel}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[wd.btn, { backgroundColor: colors.red }]} onPress={onConfirm}>
-            <Text style={[wd.btnText, { color: "#fff" }]}>{confirmLabel}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-const wd = StyleSheet.create({
-  overlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center", zIndex: 100 },
-  card: { width: 300, borderRadius: 18, padding: 24, gap: 20 },
-  msg: { fontSize: 16, lineHeight: 24, textAlign: "center" },
-  row: { flexDirection: "row", gap: 10 },
-  btn: { flex: 1, borderRadius: 12, paddingVertical: 14, alignItems: "center" },
-  btnText: { fontSize: 15, fontWeight: "700" },
-});
+import WebConfirmDialog from "@/components/WebConfirmDialog";
+import EditScoreModal from "@/components/EditScoreModal";
+import EditPlayerNameModal from "@/components/EditPlayerNameModal";
 
 type PendingConfirm = { message: string; onConfirm: () => void; label: string } | null;
 type EditTarget = { roundNumber: number; playerId: string; playerName: string; currentPoints: number } | null;
@@ -52,7 +18,7 @@ type EditNameTarget = { playerId: string; currentName: string } | null;
 
 export default function ScoreboardScreen() {
   const { game, undoLastRound, editRoundScore, editPlayerName, finishGame, abandonGame } = useGame();
-  const { isDark, t } = useTheme();
+  const { t } = useTheme();
   const { s } = useSettings();
   const [pending, setPending] = useState<PendingConfirm>(null);
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
@@ -65,13 +31,15 @@ export default function ScoreboardScreen() {
     else if (!game) router.replace("/");
   }, [game]);
 
+  const ranking = useMemo(() => (game ? getRanking(game) : []), [game]);
+
   if (!game) return null;
 
-  const leader = getLeader(game);
+  const leader = ranking.length > 0 ? ranking[0].player : null;
   const rounds = Array.from({ length: game.currentRound }, (_, i) => i + 1);
 
   const sortedPlayers = game.rounds.length > 0
-    ? [...game.players].sort((a, b) => getTotalScore(game, a.id) - getTotalScore(game, b.id))
+    ? ranking.map((r) => r.player)
     : game.players;
 
   function webConfirm(message: string, label: string, onConfirm: () => void) {
@@ -130,92 +98,41 @@ export default function ScoreboardScreen() {
       />
 
       {/* Edit score modal */}
-      {editTarget && (
-        <View style={wd.overlay}>
-          <View style={[wd.card, { backgroundColor: t.card }]}>
-            <Text style={[{ fontSize: 17, fontWeight: "700", color: t.text, textAlign: "center", marginBottom: 4 }]}>
-              {s.editRoundTitle(editTarget.roundNumber, editTarget.playerName)}
-            </Text>
-            <Text style={[{ fontSize: 13, color: t.muted, textAlign: "center", marginBottom: 16 }]}>
-              {s.editRoundLabel}
-            </Text>
-            <TextInput
-              style={[{ backgroundColor: t.cardAlt, color: t.text, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 28, fontWeight: "700", textAlign: "center", marginBottom: 16 }]}
-              value={editValue}
-              onChangeText={(v) => { if (/^\d*$/.test(v)) setEditValue(v); }}
-              keyboardType="number-pad"
-              returnKeyType="done"
-              autoFocus
-              selectTextOnFocus
-              onSubmitEditing={() => {
-                Keyboard.dismiss();
-                const pts = parseInt(editValue, 10);
-                if (!isNaN(pts)) editRoundScore(editTarget!.roundNumber, editTarget!.playerId, pts);
-                setEditTarget(null);
-              }}
-            />
-            <View style={wd.row}>
-              <TouchableOpacity style={[wd.btn, { backgroundColor: t.cardAlt }]} onPress={() => { Keyboard.dismiss(); setEditTarget(null); }}>
-                <Text style={[wd.btnText, { color: t.text }]}>{s.cancel}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[wd.btn, { backgroundColor: colors.amber }]}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  const pts = parseInt(editValue, 10);
-                  if (!isNaN(pts)) editRoundScore(editTarget!.roundNumber, editTarget!.playerId, pts);
-                  setEditTarget(null);
-                }}
-              >
-                <Text style={[wd.btnText, { color: "#1e293b" }]}>{s.save}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
+      <EditScoreModal
+        visible={!!editTarget}
+        roundNumber={editTarget?.roundNumber ?? 0}
+        playerName={editTarget?.playerName ?? ""}
+        value={editValue}
+        onChangeValue={setEditValue}
+        onSave={() => {
+          const pts = parseInt(editValue, 10);
+          if (!isNaN(pts) && editTarget) editRoundScore(editTarget.roundNumber, editTarget.playerId, pts);
+          setEditTarget(null);
+        }}
+        onCancel={() => setEditTarget(null)}
+        saveLabel={s.save}
+        cancelLabel={s.cancel}
+        title={editTarget ? s.editRoundTitle(editTarget.roundNumber, editTarget.playerName) : ""}
+        hint={s.editRoundLabel}
+        t={t}
+      />
 
       {/* Edit player name modal */}
-      {editNameTarget && (
-        <View style={wd.overlay}>
-          <View style={[wd.card, { backgroundColor: t.card }]}>
-            <Text style={[{ fontSize: 17, fontWeight: "700", color: t.text, textAlign: "center", marginBottom: 4 }]}>
-              {s.editPlayerNameTitle}
-            </Text>
-            <Text style={[{ fontSize: 13, color: t.muted, textAlign: "center", marginBottom: 16 }]}>
-              {s.editPlayerNameLabel}
-            </Text>
-            <TextInput
-              style={[{ backgroundColor: t.cardAlt, color: t.text, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 22, fontWeight: "700", textAlign: "center", marginBottom: 16 }]}
-              value={editNameValue}
-              onChangeText={setEditNameValue}
-              autoCapitalize="words"
-              returnKeyType="done"
-              autoFocus
-              selectTextOnFocus
-              onSubmitEditing={() => {
-                Keyboard.dismiss();
-                if (editNameValue.trim()) editPlayerName(editNameTarget!.playerId, editNameValue);
-                setEditNameTarget(null);
-              }}
-            />
-            <View style={wd.row}>
-              <TouchableOpacity style={[wd.btn, { backgroundColor: t.cardAlt }]} onPress={() => { Keyboard.dismiss(); setEditNameTarget(null); }}>
-                <Text style={[wd.btnText, { color: t.text }]}>{s.cancel}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[wd.btn, { backgroundColor: colors.amber }]}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  if (editNameValue.trim()) editPlayerName(editNameTarget!.playerId, editNameValue);
-                  setEditNameTarget(null);
-                }}
-              >
-                <Text style={[wd.btnText, { color: "#1e293b" }]}>{s.save}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
+      <EditPlayerNameModal
+        visible={!!editNameTarget}
+        value={editNameValue}
+        onChangeValue={setEditNameValue}
+        onSave={() => {
+          if (editNameValue.trim() && editNameTarget) editPlayerName(editNameTarget.playerId, editNameValue);
+          setEditNameTarget(null);
+        }}
+        onCancel={() => setEditNameTarget(null)}
+        saveLabel={s.save}
+        cancelLabel={s.cancel}
+        title={s.editPlayerNameTitle}
+        hint={s.editPlayerNameLabel}
+        t={t}
+      />
 
       {/* Round header */}
       <View style={st.roundHeader}>
@@ -227,7 +144,7 @@ export default function ScoreboardScreen() {
       {leader && game.rounds.length > 0 && (
         <View style={st.leaderBanner}>
           <Text style={{ color: colors.green, fontSize: 15, fontWeight: "600" }}>
-            {s.leading(leader.name, getTotalScore(game, leader.id))}
+            {s.leading(leader.name, ranking[0].total)}
           </Text>
         </View>
       )}
@@ -257,7 +174,7 @@ export default function ScoreboardScreen() {
 
             {/* Player rows */}
             {sortedPlayers.map((player) => {
-              const total = getTotalScore(game, player.id);
+              const total = ranking.find((r) => r.player.id === player.id)?.total ?? 0;
               const isLeading = leader?.id === player.id;
               return (
                 <View key={player.id} style={[st.tableRow, { backgroundColor: isLeading ? colors.greenLight : "transparent", borderBottomColor: t.border, borderBottomWidth: 1 }]}>
@@ -329,9 +246,9 @@ export default function ScoreboardScreen() {
 const st = StyleSheet.create({
   flex: { flex: 1 },
   roundHeader: { backgroundColor: colors.amber, paddingHorizontal: 20, paddingVertical: 16, alignItems: "center" },
-  roundTitle: { color: "#1e293b", fontSize: 22, fontWeight: "900" },
-  roundSub: { color: "#334155", fontSize: 13, marginTop: 2, opacity: 0.8 },
-  leaderBanner: { backgroundColor: colors.greenLight, paddingHorizontal: 20, paddingVertical: 10, alignItems: "center", borderBottomWidth: 1, borderBottomColor: "rgba(34,197,94,0.2)" },
+  roundTitle: { color: colors.onAmber, fontSize: 22, fontWeight: "900" },
+  roundSub: { color: colors.onAmberSub, fontSize: 13, marginTop: 2, opacity: 0.8 },
+  leaderBanner: { backgroundColor: colors.greenLight, paddingHorizontal: 20, paddingVertical: 10, alignItems: "center", borderBottomWidth: 1, borderBottomColor: colors.greenBg },
   tableRow: { flexDirection: "row" },
   nameCell: { width: 130, paddingHorizontal: 12, paddingVertical: 14, borderRightWidth: 1, justifyContent: "center" },
   roundCell: { width: 64, paddingHorizontal: 8, paddingVertical: 12, borderRightWidth: 1, alignItems: "center", justifyContent: "center" },
@@ -343,7 +260,7 @@ const st = StyleSheet.create({
   totalText: { fontSize: 18, fontWeight: "900" },
   footer: { padding: 20, gap: 10, borderTopWidth: 1 },
   enterBtn: { backgroundColor: colors.amber, borderRadius: 18, paddingVertical: 18, alignItems: "center" },
-  enterBtnText: { color: "#1e293b", fontSize: 17, fontWeight: "700" },
+  enterBtnText: { color: colors.onAmber, fontSize: 17, fontWeight: "700" },
   undoBtn: { alignItems: "center", paddingVertical: 10 },
   finishBtn: { alignItems: "center", paddingVertical: 10 },
   abandonBtn: { alignItems: "center", paddingVertical: 10 },

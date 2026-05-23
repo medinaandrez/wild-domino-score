@@ -57,7 +57,7 @@ export default function NewGameScreen() {
       Alert.alert(s.duplicateNames, s.duplicateNamesMsg);
       return;
     }
-    await startGame(names, settings.rounds ?? 10);
+    await startGame(names, settings.rounds);
     router.replace("/game");
   }
 
@@ -129,13 +129,13 @@ const st = StyleSheet.create({
   hint: { fontSize: 15, marginBottom: 12 },
   row: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
   badge: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.amber, alignItems: "center", justifyContent: "center" },
-  badgeText: { color: "#1e293b", fontWeight: "700", fontSize: 16 },
+  badgeText: { color: colors.onAmber, fontWeight: "700", fontSize: 16 },
   input: { flex: 1, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 16, fontSize: 18 },
   removeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(239,68,68,0.15)", alignItems: "center", justifyContent: "center" },
   removeBtnText: { color: colors.red, fontSize: 22, fontWeight: "700" },
   addBtn: { borderWidth: 2, borderStyle: "dashed", borderRadius: 14, paddingVertical: 16, alignItems: "center", marginTop: 4 },
   startBtn: { backgroundColor: colors.amber, borderRadius: 18, paddingVertical: 18, alignItems: "center", marginTop: 20 },
-  startBtnText: { color: "#1e293b", fontSize: 20, fontWeight: "700" },
+  startBtnText: { color: colors.onAmber, fontSize: 20, fontWeight: "700" },
   suggestionsBlock: { gap: 8, marginTop: 4 },
   suggestionsLabel: { fontSize: 12, fontWeight: "700", letterSpacing: 0.6, marginLeft: 2 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

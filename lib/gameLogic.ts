@@ -1,10 +1,10 @@
 import { Game, Player, Round, RoundScore } from "./types";
 
-export const TOTAL_ROUNDS = 10;
+export const DEFAULT_ROUND_COUNT = 10;
 export const DOUBLE_OPENERS = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
 export const SPINNER_TILE_VALUE = 10;
 
-export function createGame(playerNames: string[], totalRounds: number = TOTAL_ROUNDS): Game {
+export function createGame(playerNames: string[], totalRounds: number = DEFAULT_ROUND_COUNT): Game {
   const players: Player[] = playerNames.map((name, i) => ({
     id: String(i),
     name: name.trim(),
@@ -21,10 +21,6 @@ export function createGame(playerNames: string[], totalRounds: number = TOTAL_RO
 
 export function getDoubleOpener(roundNumber: number): number {
   return DOUBLE_OPENERS[roundNumber - 1];
-}
-
-export function getRoundLabel(roundNumber: number): string {
-  return `Ronda ${roundNumber} — Doble ${getDoubleOpener(roundNumber)}`;
 }
 
 export function getTotalScore(game: Game, playerId: string): number {

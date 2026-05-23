@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import Constants from "expo-constants";
 import { Alert, Linking, Platform, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { useSettings } from "@/lib/SettingsContext";
 import { colors, useTheme } from "@/lib/theme";
@@ -7,7 +8,7 @@ import { Language, RoundCount } from "@/lib/settings";
 const SITE_URL = "https://spinner-scorekeeper.vercel.app";
 const REPO_URL = "https://github.com/medinaandrez/wild-domino-score";
 
-const APP_VERSION = "1.1.0";
+const APP_VERSION = Constants.expoConfig?.version ?? "—";
 
 function InlinePicker<T extends string | number>({
   options, value, onChange, t,
@@ -33,7 +34,7 @@ function InlinePicker<T extends string | number>({
             ]}
             activeOpacity={0.7}
           >
-            <Text style={[ip.label, { color: active ? "#1e293b" : t.text }]}>{opt.label}</Text>
+            <Text style={[ip.label, { color: active ? colors.onAmber : t.text }]}>{opt.label}</Text>
           </TouchableOpacity>
         );
       })}
@@ -72,7 +73,7 @@ export default function SettingsScreen() {
   }
 
   const langValue = settings.language === "es" ? s.langEs : s.langEn;
-  const roundsValue = s.roundsHint(settings.rounds ?? 10);
+  const roundsValue = s.roundsHint(settings.rounds);
 
   return (
     <View style={[st.flex, { backgroundColor: t.bg }]}>
@@ -114,7 +115,7 @@ export default function SettingsScreen() {
               <Text style={[st.rowLabel, { color: t.text }]}>{s.roundsLabel}</Text>
               <InlinePicker
                 t={t}
-                value={settings.rounds ?? 10}
+                value={settings.rounds}
                 onChange={(v) => updateSetting("rounds", v as RoundCount)}
                 options={[
                   { label: s.rounds5, value: 5 as RoundCount },
@@ -132,22 +133,6 @@ export default function SettingsScreen() {
               </View>
             </TouchableOpacity>
           )}
-
-          <View style={[st.divider, { backgroundColor: t.border }]} />
-
-          {/* Sounds */}
-          <View style={st.row}>
-            <View style={st.rowLabelBlock}>
-              <Text style={[st.rowLabel, { color: t.text }]}>{s.soundsLabel}</Text>
-              <Text style={[st.rowHint, { color: t.muted }]}>{s.soundsHint}</Text>
-            </View>
-            <Switch
-              value={settings.soundEnabled}
-              onValueChange={(v) => updateSetting("soundEnabled", v)}
-              trackColor={{ false: t.border, true: colors.amber }}
-              thumbColor="#fff"
-            />
-          </View>
 
           {!isWeb && (
             <>

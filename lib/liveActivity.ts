@@ -8,9 +8,9 @@ function available(): boolean {
   return Platform.OS === "ios" && !!WildDominoLiveActivity;
 }
 
-function playersJSON(game: Game): string {
+function playersJSON(ranking: ReturnType<typeof getRanking>): string {
   return JSON.stringify(
-    getRanking(game).map((r) => ({ name: r.player.name, score: r.total }))
+    ranking.map((r) => ({ name: r.player.name, score: r.total }))
   );
 }
 
@@ -25,7 +25,7 @@ export function startLiveActivity(game: Game): void {
     getDoubleOpener(game.currentRound),
     leader?.player.name ?? "",
     leader?.total ?? 0,
-    playersJSON(game)
+    playersJSON(ranking)
   );
 }
 
@@ -39,7 +39,7 @@ export function updateLiveActivity(game: Game, isFinished = false): void {
     getDoubleOpener(Math.min(game.currentRound, game.totalRounds)),
     leader?.player.name ?? "",
     leader?.total ?? 0,
-    playersJSON(game),
+    playersJSON(ranking),
     isFinished
   );
 }

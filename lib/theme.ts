@@ -8,8 +8,12 @@ export const colors = {
   cyan: "#06b6d4",
   green: "#22c55e",
   greenLight: "rgba(34,197,94,0.15)",
+  greenBorder: "rgba(34,197,94,0.3)",
+  greenBg: "rgba(34,197,94,0.2)",
   red: "#ef4444",
   redLight: "rgba(239,68,68,0.15)",
+  onAmber: "#1e293b",
+  onAmberSub: "#334155",
 
   dark: {
     bg: "#0f172a",
@@ -33,8 +37,12 @@ export const colors = {
 
 export function useTheme() {
   const scheme = useColorScheme();
+  // Access SettingsContext directly here to avoid a circular dependency
+  // (SettingsContext -> theme -> SettingsContext). The context may be null
+  // before the provider mounts, so we fall back to "auto".
   const ctx = useContext(SettingsContext);
   const themePref = ctx?.settings?.theme ?? "auto";
+  // Web always uses light theme — dark-mode CSS variables are not wired up.
   const isDark = Platform.OS === "web"
     ? false
     : themePref === "auto" ? scheme === "dark" : themePref === "dark";

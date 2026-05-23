@@ -1,6 +1,6 @@
 import { Platform, NativeModules } from "react-native";
 import { Game } from "./types";
-import { getTotalScore, getDoubleOpener } from "./gameLogic";
+import { getRanking, getDoubleOpener } from "./gameLogic";
 import { Language } from "./settings";
 
 const { WildDominoSharedData } = NativeModules;
@@ -26,9 +26,7 @@ export function updateWidget(game: Game | null): void {
     return;
   }
 
-  const rankings = game.players
-    .map((p) => ({ name: p.name, total: getTotalScore(game, p.id) }))
-    .sort((a, b) => a.total - b.total);
+  const rankings = getRanking(game).map((r) => ({ name: r.player.name, total: r.total }));
 
   const isFinished = !!game.finishedAt;
 

@@ -7,7 +7,6 @@ export type RoundCount = 5 | 7 | 10;
 export interface AppSettings {
   language: Language;
   theme: ThemePref;
-  soundEnabled: boolean;
   hapticEnabled: boolean;
   rounds: RoundCount;
 }
@@ -15,7 +14,6 @@ export interface AppSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
   language: "es",
   theme: "auto",
-  soundEnabled: true,
   hapticEnabled: true,
   rounds: 10,
 };

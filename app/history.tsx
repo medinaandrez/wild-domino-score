@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SavedGame } from "@/lib/types";
 import { clearHistory, loadHistory } from "@/lib/storage";
 import { useSettings } from "@/lib/SettingsContext";
 import { colors, useTheme } from "@/lib/theme";
-
-const MEDALS = ["🥇", "🥈", "🥉"];
+import { MEDALS } from "@/lib/constants";
 
 function computeStats(history: SavedGame[]) {
   const winCount: Record<string, number> = {};
@@ -34,12 +33,12 @@ export default function HistoryScreen() {
 
   useEffect(() => { loadHistory().then(setHistory); }, []);
 
-  function formatDate(iso: string): string {
+  const formatDate = useCallback((iso: string): string => {
     return new Date(iso).toLocaleDateString(s.dateLocale, {
       year: "numeric", month: "short", day: "numeric",
       hour: "2-digit", minute: "2-digit",
     });
-  }
+  }, [s.dateLocale]);
 
   function confirmClear() {
     Alert.alert(s.confirmClearTitle, s.confirmClearMsg, [
@@ -58,7 +57,7 @@ export default function HistoryScreen() {
     );
   }
 
-  const stats = computeStats(history);
+  const stats = useMemo(() => computeStats(history), [history]);
 
   return (
     <View style={[st.flex, { backgroundColor: t.bg }]}>

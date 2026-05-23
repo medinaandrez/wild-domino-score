@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { useGame } from "@/lib/GameContext";
 import { useSettings } from "@/lib/SettingsContext";
-import { SPINNER_TILE_VALUE } from "@/lib/gameLogic";
+import { getDoubleOpener, SPINNER_TILE_VALUE } from "@/lib/gameLogic";
 import { RoundScore } from "@/lib/types";
 import { colors, useTheme } from "@/lib/theme";
 
@@ -61,7 +61,7 @@ export default function EnterScoresScreen() {
       <View style={isWeb ? st.webInner : undefined}>
         {/* Round label */}
         <View style={st.roundBanner}>
-          <Text style={st.roundTitle}>{s.roundLabel(game.currentRound, game.totalRounds - game.currentRound)}</Text>
+          <Text style={st.roundTitle}>{s.roundLabel(game.currentRound, getDoubleOpener(game.currentRound))}</Text>
           <Text style={st.roundSub}>{s.roundWinnerNote}</Text>
         </View>
 
@@ -149,8 +149,8 @@ const st = StyleSheet.create({
   scrollWeb: { padding: 20, paddingBottom: 40, maxWidth: 600, width: "100%", alignSelf: "center" as const },
   webInner: {},
   roundBanner: { backgroundColor: colors.amber, borderRadius: 20, paddingHorizontal: 20, paddingVertical: 18, alignItems: "center" },
-  roundTitle: { color: "#1e293b", fontSize: 20, fontWeight: "900" },
-  roundSub: { color: "#334155", fontSize: 13, marginTop: 4, opacity: 0.8 },
+  roundTitle: { color: colors.onAmber, fontSize: 20, fontWeight: "900" },
+  roundSub: { color: colors.onAmberSub, fontSize: 13, marginTop: 4, opacity: 0.8 },
   hint: { flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 14, padding: 14 },
   hintText: { flex: 1, fontSize: 14, lineHeight: 22 },
   card: { borderRadius: 18, padding: 16, marginBottom: 14 },
@@ -159,11 +159,11 @@ const st = StyleSheet.create({
   inputRow: { flexDirection: "row", gap: 10, alignItems: "stretch" },
   inputWrap: { flex: 1 },
   input: { borderRadius: 14, paddingHorizontal: 16, paddingVertical: 16, fontSize: 26, fontWeight: "700", textAlign: "center", width: "100%" },
-  wonBtn: { backgroundColor: colors.greenLight, borderWidth: 1, borderColor: "rgba(34,197,94,0.3)", borderRadius: 14, paddingHorizontal: 20, paddingVertical: 16, justifyContent: "center", alignItems: "center" },
+  wonBtn: { backgroundColor: colors.greenLight, borderWidth: 1, borderColor: colors.greenBorder, borderRadius: 14, paddingHorizontal: 20, paddingVertical: 16, justifyContent: "center", alignItems: "center" },
   // Web layout
   inputColWeb: { gap: 10 },
   inputWeb: { borderRadius: 14, paddingHorizontal: 16, paddingVertical: 16, fontSize: 26, fontWeight: "700", textAlign: "center" as const },
-  wonBtnWeb: { backgroundColor: colors.greenLight, borderWidth: 1, borderColor: "rgba(34,197,94,0.3)", borderRadius: 14, paddingVertical: 14, alignItems: "center" },
+  wonBtnWeb: { backgroundColor: colors.greenLight, borderWidth: 1, borderColor: colors.greenBorder, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
   confirmBtn: { backgroundColor: colors.amber, borderRadius: 18, paddingVertical: 18, alignItems: "center", marginTop: 8 },
-  confirmBtnText: { color: "#1e293b", fontSize: 20, fontWeight: "700" },
+  confirmBtnText: { color: colors.onAmber, fontSize: 20, fontWeight: "700" },
 });

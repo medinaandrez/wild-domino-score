@@ -13,9 +13,10 @@ import { useGame } from "@/lib/GameContext";
 import { useSettings } from "@/lib/SettingsContext";
 import { getRanking } from "@/lib/gameLogic";
 import { saveGameToHistory } from "@/lib/storage";
+import { Game } from "@/lib/types";
 import { colors, useTheme } from "@/lib/theme";
-
-const MEDALS = ["🥇", "🥈", "🥉"];
+import { Strings } from "@/lib/i18n";
+import { MEDALS } from "@/lib/constants";
 const { width: SW, height: SH } = Dimensions.get("window");
 
 const CONFETTI_COLORS = [
@@ -31,9 +32,10 @@ const PIECES = Array.from({ length: 28 }, (_, i) => ({
   delay: Math.random() * 600,
   duration: 2000 + Math.random() * 1200,
   rotate: Math.random() * 360,
+  isCircle: Math.random() > 0.5,
 }));
 
-function ConfettiPiece({ x, color, size, delay, duration, rotate }: typeof PIECES[0]) {
+function ConfettiPiece({ x, color, size, delay, duration, rotate, isCircle }: typeof PIECES[0]) {
   const translateY = useSharedValue(-20);
   const opacity = useSharedValue(0);
   const rot = useSharedValue(rotate);
@@ -51,8 +53,6 @@ function ConfettiPiece({ x, color, size, delay, duration, rotate }: typeof PIECE
     transform: [{ translateY: translateY.value }, { rotate: `${rot.value}deg` }],
     opacity: opacity.value,
   }));
-
-  const isCircle = Math.random() > 0.5;
 
   return (
     <Animated.View
@@ -99,7 +99,7 @@ function WinnerBanner({ name, label, score }: { name: string; label: string; sco
   );
 }
 
-function RankingContent({ ranking, game, t, s }: { ranking: ReturnType<typeof getRanking>; game: any; t: any; s: any }) {
+function RankingContent({ ranking, game, t, s }: { ranking: ReturnType<typeof getRanking>; game: Game; t: ReturnType<typeof useTheme>["t"]; s: Strings }) {
   const [chartWidth, setChartWidth] = useState(0);
   return (
     <View style={{ backgroundColor: t.bg, padding: 4, gap: 12 }}>
@@ -229,7 +229,7 @@ export default function ResultsScreen() {
           )}
 
           <TouchableOpacity style={[st.btn, { backgroundColor: colors.amber }]} onPress={handleNewGame} activeOpacity={0.8}>
-            <Text style={[st.btnText, { color: "#1e293b" }]}>{s.newGameBtn}</Text>
+            <Text style={[st.btnText, { color: colors.onAmber }]}>{s.newGameBtn}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[st.btn, { backgroundColor: t.card, borderWidth: 1.5, borderColor: t.border }]} onPress={handleHome} activeOpacity={0.75}>
@@ -247,9 +247,9 @@ const st = StyleSheet.create({
   confettiContainer: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10 },
   confettiPiece: { position: "absolute", top: 0 },
   winnerBanner: { backgroundColor: colors.amber, borderRadius: 24, padding: 28, alignItems: "center" },
-  winnerName: { color: "#1e293b", fontSize: 30, fontWeight: "900" },
-  winnerLabel: { color: "#334155", fontSize: 17, fontWeight: "600", marginTop: 4 },
-  winnerScore: { color: "#1e293b", fontSize: 40, fontWeight: "900", marginTop: 10 },
+  winnerName: { color: colors.onAmber, fontSize: 30, fontWeight: "900" },
+  winnerLabel: { color: colors.onAmberSub, fontSize: 17, fontWeight: "600", marginTop: 4 },
+  winnerScore: { color: colors.onAmber, fontSize: 40, fontWeight: "900", marginTop: 10 },
   sectionTitle: { fontSize: 20, fontWeight: "700", marginTop: 4 },
   rankCard: { borderRadius: 18, paddingHorizontal: 20, paddingVertical: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   rankLeft: { flexDirection: "row", alignItems: "center", gap: 14 },
@@ -261,5 +261,5 @@ const st = StyleSheet.create({
   actions: { gap: 12, marginTop: 4 },
   btn: { borderRadius: 18, paddingVertical: 18, alignItems: "center" },
   btnText: { fontSize: 20, fontWeight: "700" },
-  savedBadge: { backgroundColor: colors.greenLight, borderWidth: 1, borderColor: "rgba(34,197,94,0.3)", borderRadius: 18, paddingVertical: 16, alignItems: "center" },
+  savedBadge: { backgroundColor: colors.greenLight, borderWidth: 1, borderColor: colors.greenBorder, borderRadius: 18, paddingVertical: 16, alignItems: "center" },
 });

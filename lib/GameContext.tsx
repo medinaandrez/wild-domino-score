@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { Game, RoundScore } from "./types";
@@ -146,8 +147,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     cancelGameReminder();
   }, []);
 
+  const value = useMemo(
+    () => ({ game, startGame, submitRound, undoLastRound, editRoundScore, editPlayerName, finishGame, abandonGame, loading }),
+    [game, startGame, submitRound, undoLastRound, editRoundScore, editPlayerName, finishGame, abandonGame, loading]
+  );
+
   return (
-    <GameContext.Provider value={{ game, startGame, submitRound, undoLastRound, editRoundScore, editPlayerName, finishGame, abandonGame, loading }}>
+    <GameContext.Provider value={value}>
       {children}
     </GameContext.Provider>
   );

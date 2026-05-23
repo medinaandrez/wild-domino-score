@@ -7,7 +7,7 @@ import { colors, useTheme } from "@/lib/theme";
 
 export default function HomeScreen() {
   const { game, loading } = useGame();
-  const { isDark, t } = useTheme();
+  const { t } = useTheme();
   const { s } = useSettings();
 
   if (loading) {
@@ -62,7 +62,7 @@ const st = StyleSheet.create({
   logoTag: { fontSize: 13, marginTop: 4, opacity: 0.7 },
   buttons: { width: "100%", gap: 14 },
   btnPrimary: { backgroundColor: colors.amber, borderRadius: 18, paddingVertical: 18, alignItems: "center" },
-  btnPrimaryText: { color: "#1e293b", fontSize: 20, fontWeight: "700" },
+  btnPrimaryText: { color: colors.onAmber, fontSize: 20, fontWeight: "700" },
   btnSecondary: { borderRadius: 18, paddingVertical: 18, alignItems: "center" },
   btnSecondaryText: { fontSize: 20, fontWeight: "700" },
   btnOutline: { borderRadius: 18, borderWidth: 1.5, paddingVertical: 18, alignItems: "center" },

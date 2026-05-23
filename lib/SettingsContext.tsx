@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { AppSettings, DEFAULT_SETTINGS, loadSettings, saveSettings } from "./settings";
 import { getStrings, Strings } from "./i18n";
 import { setWidgetLanguage } from "./widgetData";
@@ -34,10 +34,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     if (key === "language") setWidgetLanguage(value as AppSettings["language"]);
   }, [settings]);
 
-  const s = getStrings(settings.language);
+  const s = useMemo(() => getStrings(settings.language), [settings.language]);
+
+  const value = useMemo(
+    () => ({ settings, s, updateSetting, loading }),
+    [settings, s, updateSetting, loading]
+  );
 
   return (
-    <SettingsContext.Provider value={{ settings, s, updateSetting, loading }}>
+    <SettingsContext.Provider value={value}>
       {children}
     </SettingsContext.Provider>
   );
