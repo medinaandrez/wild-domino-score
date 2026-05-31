@@ -149,77 +149,98 @@ export default function ScoreboardScreen() {
         </View>
       )}
 
-      {/* Table */}
-      <ScrollView horizontal style={st.flex}>
-        <ScrollView>
+      {/* Table — names fixed left, rounds scroll, total fixed right */}
+      <ScrollView style={st.flex}>
+        <View style={st.tableContainer}>
+
+          {/* Fixed left: names */}
           <View>
-            {/* Header row */}
-            <View style={st.tableRow}>
-              <View style={[st.nameCell, { backgroundColor: t.cardAlt, borderColor: t.border }]}>
-                <Text style={[st.colLabel, { color: t.muted }]}>{s.playerCol}</Text>
+            <View style={[st.nameCell, { height: HEADER_H, backgroundColor: t.cardAlt, borderRightColor: t.border, borderRightWidth: 1, borderBottomColor: t.border, borderBottomWidth: 1 }]}>
+              <Text style={[st.colLabel, { color: t.muted }]}>{s.playerCol}</Text>
+            </View>
+            {sortedPlayers.map((player) => {
+              const isLeading = leader?.id === player.id;
+              return (
+                <TouchableOpacity
+                  key={player.id}
+                  style={[st.nameCell, { height: ROW_H, backgroundColor: isLeading ? colors.greenLight : "transparent", borderRightColor: t.border, borderRightWidth: 1, borderBottomColor: t.border, borderBottomWidth: 1 }]}
+                  onLongPress={() => { setEditNameValue(player.name); setEditNameTarget({ playerId: player.id, currentName: player.name }); }}
+                  activeOpacity={0.7}
+                  delayLongPress={500}
+                >
+                  <Text style={[st.playerName, { color: t.text }]} numberOfLines={1}>
+                    {isLeading ? "🏆 " : ""}{player.name}
+                  </Text>
+                  <Text style={{ fontSize: 9, color: t.muted, marginTop: 2 }}>✏️</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Scrollable middle: round columns */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={st.flex} nestedScrollEnabled>
+            <View>
+              <View style={{ flexDirection: "row" }}>
+                {rounds.map((r) => {
+                  const isCurrent = r === game.currentRound;
+                  return (
+                    <View key={r} style={[st.roundCell, { height: HEADER_H, backgroundColor: isCurrent ? colors.amberLight : t.cardAlt, borderRightColor: t.border, borderRightWidth: 1, borderBottomColor: t.border, borderBottomWidth: 1 }]}>
+                      <Text style={[st.colLabel, { color: isCurrent ? colors.amber : t.muted }]}>R{r}</Text>
+                      <Text style={[st.colSub, { color: t.muted }]}>D{getDoubleOpener(r)}</Text>
+                    </View>
+                  );
+                })}
               </View>
-              {rounds.map((r) => {
-                const isCurrent = r === game.currentRound;
+              {sortedPlayers.map((player) => {
+                const isLeading = leader?.id === player.id;
                 return (
-                  <View key={r} style={[st.roundCell, { backgroundColor: isCurrent ? colors.amberLight : t.cardAlt, borderColor: t.border }]}>
-                    <Text style={[st.colLabel, { color: isCurrent ? colors.amber : t.muted }]}>R{r}</Text>
-                    <Text style={[st.colSub, { color: t.muted }]}>D{game.totalRounds - r}</Text>
+                  <View key={player.id} style={{ flexDirection: "row" }}>
+                    {rounds.map((r) => {
+                      const round = game.rounds.find((cr) => cr.roundNumber === r);
+                      const pts = round ? getScoreForRound(round, player.id) : undefined;
+                      const isCurrent = r === game.currentRound;
+                      const isEditable = pts !== undefined;
+                      return (
+                        <TouchableOpacity
+                          key={r}
+                          style={[st.roundCell, { height: ROW_H, backgroundColor: isCurrent ? colors.amberLight : isLeading ? colors.greenLight : "transparent", borderRightColor: t.border, borderRightWidth: 1, borderBottomColor: t.border, borderBottomWidth: 1 }]}
+                          onPress={() => {
+                            if (!isEditable) return;
+                            setEditValue(String(pts));
+                            setEditTarget({ roundNumber: r, playerId: player.id, playerName: player.name, currentPoints: pts! });
+                          }}
+                          activeOpacity={isEditable ? 0.6 : 1}
+                        >
+                          {pts !== undefined
+                            ? <Text style={[st.scoreText, { color: pts === 0 ? colors.green : t.text }]}>{pts}</Text>
+                            : <Text style={{ color: t.muted }}>—</Text>}
+                          {isEditable && <Text style={{ fontSize: 8, color: t.muted, marginTop: 2 }}>✏️</Text>}
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 );
               })}
-              <View style={[st.totalCell, { backgroundColor: colors.amberLight, borderColor: t.border }]}>
-                <Text style={[st.colLabel, { color: colors.amber }]}>{s.total}</Text>
-              </View>
             </View>
+          </ScrollView>
 
-            {/* Player rows */}
+          {/* Fixed right: totals */}
+          <View>
+            <View style={[st.totalCell, { height: HEADER_H, backgroundColor: colors.amberLight, borderBottomColor: t.border, borderBottomWidth: 1 }]}>
+              <Text style={[st.colLabel, { color: colors.amber }]}>{s.total}</Text>
+            </View>
             {sortedPlayers.map((player) => {
               const total = ranking.find((r) => r.player.id === player.id)?.total ?? 0;
               const isLeading = leader?.id === player.id;
               return (
-                <View key={player.id} style={[st.tableRow, { backgroundColor: isLeading ? colors.greenLight : "transparent", borderBottomColor: t.border, borderBottomWidth: 1 }]}>
-                  <TouchableOpacity
-                    style={[st.nameCell, { borderColor: t.border }]}
-                    onLongPress={() => { setEditNameValue(player.name); setEditNameTarget({ playerId: player.id, currentName: player.name }); }}
-                    activeOpacity={0.7}
-                    delayLongPress={500}
-                  >
-                    <Text style={[st.playerName, { color: t.text }]} numberOfLines={1}>
-                      {isLeading ? "🏆 " : ""}{player.name}
-                    </Text>
-                    <Text style={{ fontSize: 9, color: t.muted, marginTop: 2 }}>✏️</Text>
-                  </TouchableOpacity>
-                  {rounds.map((r) => {
-                    const round = game.rounds.find((cr) => cr.roundNumber === r);
-                    const pts = round ? getScoreForRound(round, player.id) : undefined;
-                    const isCurrent = r === game.currentRound;
-                    const isEditable = pts !== undefined;
-                    return (
-                      <TouchableOpacity
-                        key={r}
-                        style={[st.roundCell, { backgroundColor: isCurrent ? colors.amberLight : "transparent", borderColor: t.border }]}
-                        onPress={() => {
-                          if (!isEditable) return;
-                          setEditValue(String(pts));
-                          setEditTarget({ roundNumber: r, playerId: player.id, playerName: player.name, currentPoints: pts! });
-                        }}
-                        activeOpacity={isEditable ? 0.6 : 1}
-                      >
-                        {pts !== undefined
-                          ? <Text style={[st.scoreText, { color: pts === 0 ? colors.green : t.text }]}>{pts}</Text>
-                          : <Text style={{ color: t.muted }}>—</Text>}
-                        {isEditable && <Text style={{ fontSize: 8, color: t.muted, marginTop: 2 }}>✏️</Text>}
-                      </TouchableOpacity>
-                    );
-                  })}
-                  <View style={[st.totalCell, { backgroundColor: colors.amberLight }]}>
-                    <Text style={[st.totalText, { color: colors.amber }]}>{total}</Text>
-                  </View>
+                <View key={player.id} style={[st.totalCell, { height: ROW_H, backgroundColor: isLeading ? colors.greenLight : colors.amberLight, borderBottomColor: t.border, borderBottomWidth: 1 }]}>
+                  <Text style={[st.totalText, { color: colors.amber }]}>{total}</Text>
                 </View>
               );
             })}
           </View>
-        </ScrollView>
+
+        </View>
       </ScrollView>
 
       {/* Actions */}
@@ -243,16 +264,19 @@ export default function ScoreboardScreen() {
   );
 }
 
+const HEADER_H = 52;
+const ROW_H = 56;
+
 const st = StyleSheet.create({
   flex: { flex: 1 },
   roundHeader: { backgroundColor: colors.amber, paddingHorizontal: 20, paddingVertical: 16, alignItems: "center" },
   roundTitle: { color: colors.onAmber, fontSize: 22, fontWeight: "900" },
   roundSub: { color: colors.onAmberSub, fontSize: 13, marginTop: 2, opacity: 0.8 },
   leaderBanner: { backgroundColor: colors.greenLight, paddingHorizontal: 20, paddingVertical: 10, alignItems: "center", borderBottomWidth: 1, borderBottomColor: colors.greenBg },
-  tableRow: { flexDirection: "row" },
-  nameCell: { width: 130, paddingHorizontal: 12, paddingVertical: 14, borderRightWidth: 1, justifyContent: "center" },
-  roundCell: { width: 64, paddingHorizontal: 8, paddingVertical: 12, borderRightWidth: 1, alignItems: "center", justifyContent: "center" },
-  totalCell: { width: 72, paddingHorizontal: 8, paddingVertical: 12, alignItems: "center", justifyContent: "center" },
+  tableContainer: { flexDirection: "row" },
+  nameCell: { width: 130, paddingHorizontal: 12, justifyContent: "center" },
+  roundCell: { width: 64, paddingHorizontal: 8, alignItems: "center", justifyContent: "center" },
+  totalCell: { width: 72, paddingHorizontal: 8, alignItems: "center", justifyContent: "center" },
   colLabel: { fontSize: 12, fontWeight: "700", textAlign: "center" },
   colSub: { fontSize: 11, opacity: 0.6, textAlign: "center" },
   playerName: { fontSize: 15, fontWeight: "600" },
