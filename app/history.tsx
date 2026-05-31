@@ -47,6 +47,8 @@ export default function HistoryScreen() {
     ]);
   }
 
+  const stats = useMemo(() => computeStats(history), [history]);
+
   if (history.length === 0) {
     return (
       <View style={[st.flex, st.center, { backgroundColor: t.bg }]}>
@@ -56,8 +58,6 @@ export default function HistoryScreen() {
       </View>
     );
   }
-
-  const stats = useMemo(() => computeStats(history), [history]);
 
   return (
     <View style={[st.flex, { backgroundColor: t.bg }]}>
