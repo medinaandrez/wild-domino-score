@@ -95,6 +95,16 @@ const es = {
   confirmClearTitle: "Borrar historial",
   confirmClearMsg: "¿Eliminar todas las partidas guardadas?",
   clearAll: "Borrar todo",
+  exportAll: "Exportar historial",
+  exportOne: "Exportar partida",
+  importGames: "Importar partidas",
+  importSuccess: (added: number, skipped: number) =>
+    added > 0
+      ? `Se importaron ${added} partida${added !== 1 ? "s" : ""}${skipped > 0 ? ` (${skipped} ya existía${skipped !== 1 ? "n" : ""})` : ""}.`
+      : `Todas las partidas ya estaban en el historial.`,
+  importError: "No se pudo leer el archivo. Verifica que sea un archivo válido exportado desde Wild Score.",
+  exportError: "No se pudo exportar el historial.",
+  shareNotAvailable: "Compartir no está disponible en este dispositivo.",
   pts: "pts",
   dateLocale: "es-DO",
   // Settings
@@ -255,6 +265,16 @@ const en: typeof es = {
   confirmClearTitle: "Clear history",
   confirmClearMsg: "Delete all saved games?",
   clearAll: "Delete all",
+  exportAll: "Export history",
+  exportOne: "Export game",
+  importGames: "Import games",
+  importSuccess: (added: number, skipped: number) =>
+    added > 0
+      ? `${added} game${added !== 1 ? "s" : ""} imported${skipped > 0 ? ` (${skipped} already existed)` : ""}.`
+      : "All games were already in your history.",
+  importError: "Could not read the file. Make sure it's a valid file exported from Wild Score.",
+  exportError: "Could not export history.",
+  shareNotAvailable: "Sharing is not available on this device.",
   pts: "pts",
   dateLocale: "en-US",
   preferencesSection: "Preferences",

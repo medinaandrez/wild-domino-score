@@ -48,6 +48,19 @@ export async function clearHistory(): Promise<void> {
   await AsyncStorage.removeItem(HISTORY_KEY);
 }
 
+export async function mergeImportedGames(incoming: SavedGame[]): Promise<{ added: number; skipped: number }> {
+  const existing = await loadHistory();
+  const existingIds = new Set(existing.map((g) => g.id));
+  const fresh = incoming.filter((g) => !existingIds.has(g.id));
+  if (fresh.length > 0) {
+    const merged = [...fresh, ...existing].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(merged));
+  }
+  return { added: fresh.length, skipped: incoming.length - fresh.length };
+}
+
 const FREQUENT_PLAYERS_KEY = "spinner_frequent_players";
 const MAX_FREQUENT = 12;
 

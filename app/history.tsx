@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SavedGame } from "@/lib/types";
 import { clearHistory, loadHistory } from "@/lib/storage";
+import { exportAllGames, exportSingleGame, importGamesFromFile } from "@/lib/transferHistory";
 import { useSettings } from "@/lib/SettingsContext";
 import { colors, useTheme } from "@/lib/theme";
 import { MEDALS } from "@/lib/constants";
@@ -45,6 +46,36 @@ export default function HistoryScreen() {
       { text: s.cancel, style: "cancel" },
       { text: s.clearAll, style: "destructive", onPress: async () => { await clearHistory(); setHistory([]); } },
     ]);
+  }
+
+  async function handleExportAll() {
+    try {
+      await exportAllGames();
+    } catch (err: any) {
+      if (err?.message === "cancelado") return;
+      Alert.alert("Error", err?.message === "compartir_no_disponible" ? s.shareNotAvailable : s.exportError);
+    }
+  }
+
+  async function handleExportOne(game: SavedGame) {
+    try {
+      await exportSingleGame(game);
+    } catch (err: any) {
+      if (err?.message === "cancelado") return;
+      Alert.alert("Error", s.exportError);
+    }
+  }
+
+  async function handleImport() {
+    try {
+      const { added, skipped } = await importGamesFromFile();
+      const fresh = await loadHistory();
+      setHistory(fresh);
+      Alert.alert("✅", s.importSuccess(added, skipped));
+    } catch (err: any) {
+      if (err?.message === "cancelado") return;
+      Alert.alert("Error", s.importError);
+    }
   }
 
   const stats = useMemo(() => computeStats(history), [history]);
@@ -93,14 +124,31 @@ export default function HistoryScreen() {
           </View>
         </View>
 
+        {/* Export / Import row */}
+        <View style={st.transferRow}>
+          <TouchableOpacity style={[st.transferBtn, { backgroundColor: t.card, borderColor: t.border }]} onPress={handleExportAll} activeOpacity={0.7}>
+            <Text style={st.transferIcon}>📤</Text>
+            <Text style={[st.transferLabel, { color: t.text }]}>{s.exportAll}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[st.transferBtn, { backgroundColor: t.card, borderColor: t.border }]} onPress={handleImport} activeOpacity={0.7}>
+            <Text style={st.transferIcon}>📥</Text>
+            <Text style={[st.transferLabel, { color: t.text }]}>{s.importGames}</Text>
+          </TouchableOpacity>
+        </View>
+
         <Text style={[st.sectionTitle, { color: t.text }]}>{s.gameCount(history.length)}</Text>
 
         {history.map((game) => (
           <View key={game.id} style={[st.card, { backgroundColor: t.card }]}>
             <View style={st.cardHeader}>
               <Text style={[st.dateText, { color: t.muted }]}>{formatDate(game.date)}</Text>
-              <View style={st.winnerBadge}>
-                <Text style={{ color: colors.amber, fontSize: 13, fontWeight: "700" }}>🏆 {game.winner}</Text>
+              <View style={st.cardHeaderRight}>
+                <View style={st.winnerBadge}>
+                  <Text style={{ color: colors.amber, fontSize: 13, fontWeight: "700" }}>🏆 {game.winner}</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleExportOne(game)} activeOpacity={0.7} style={st.exportOneBtn}>
+                  <Text style={{ fontSize: 16 }}>📤</Text>
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -152,4 +200,11 @@ const st = StyleSheet.create({
   scorePlayer: { fontSize: 15 },
   scorePoints: { fontSize: 15, fontWeight: "700" },
   clearBtn: { borderWidth: 1, borderRadius: 18, paddingVertical: 16, alignItems: "center", marginTop: 8 },
+  // Transfer
+  transferRow: { flexDirection: "row", gap: 10 },
+  transferBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 14, borderWidth: 1, paddingVertical: 14 },
+  transferIcon: { fontSize: 18 },
+  transferLabel: { fontSize: 14, fontWeight: "600" },
+  cardHeaderRight: { flexDirection: "row", alignItems: "center", gap: 10 },
+  exportOneBtn: { padding: 4 },
 });
