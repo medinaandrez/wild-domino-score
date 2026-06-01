@@ -53,7 +53,8 @@ export default function HistoryScreen() {
       await exportAllGames();
     } catch (err: any) {
       if (err?.message === "cancelado") return;
-      Alert.alert("Error", err?.message === "compartir_no_disponible" ? s.shareNotAvailable : s.exportError);
+      if (err?.message === "sin_partidas") return;
+      Alert.alert("Error", s.exportError);
     }
   }
 

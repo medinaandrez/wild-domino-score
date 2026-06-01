@@ -53,25 +53,31 @@ async function shareJSON(content: string, filename: string): Promise<void> {
     return;
   }
 
+  if (Platform.OS === "ios") {
+    // iOS: share JSON as text via native share sheet (AirDrop, Files, WhatsApp, etc.)
+    const result = await Share.share({ message: content, title: filename });
+    if (result.action === Share.dismissedAction) throw new Error("cancelado");
+    return;
+  }
+
+  // Android: write to cache and share as file via expo-sharing
   const cacheDir = FileSystem.cacheDirectory;
-  if (!cacheDir) throw new Error("sin_cache");
+  if (!cacheDir) {
+    // Fallback: share as text if file system unavailable
+    await Sharing.shareAsync
+      ? Share.share({ message: content, title: filename })
+      : Promise.reject(new Error("compartir_no_disponible"));
+    return;
+  }
 
   const path = `${cacheDir}${filename}`;
   await FileSystem.writeAsStringAsync(path, content, {
     encoding: FileSystem.EncodingType.UTF8,
   });
-
-  if (Platform.OS === "ios") {
-    // iOS: Share API supports file URLs natively via UIActivityViewController
-    const result = await Share.share({ url: path, title: filename });
-    if (result.action === Share.dismissedAction) throw new Error("cancelado");
-  } else {
-    // Android: use expo-sharing which handles FileProvider content URIs
-    await Sharing.shareAsync(path, {
-      mimeType: "application/json",
-      dialogTitle: filename,
-    });
-  }
+  await Sharing.shareAsync(path, {
+    mimeType: "application/json",
+    dialogTitle: filename,
+  });
 }
 
 // ─── Import ──────────────────────────────────────────────────────────────────
