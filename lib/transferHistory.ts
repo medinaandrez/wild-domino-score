@@ -1,4 +1,7 @@
-import { Platform } from "react-native";
+import { Platform, Share } from "react-native";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
+import * as DocumentPicker from "expo-document-picker";
 import { SavedGame } from "./types";
 import { loadHistory, mergeImportedGames } from "./storage";
 
@@ -21,16 +24,16 @@ function buildPayload(games: SavedGame[]): string {
 
 function parsePayload(raw: string): SavedGame[] {
   const parsed = JSON.parse(raw);
-  // Support both a plain array and a versioned payload
   if (Array.isArray(parsed)) return parsed as SavedGame[];
   if (parsed?.games && Array.isArray(parsed.games)) return parsed.games as SavedGame[];
-  throw new Error("Formato de archivo no reconocido");
+  throw new Error("formato_invalido");
 }
 
 // ─── Export ──────────────────────────────────────────────────────────────────
 
 export async function exportAllGames(): Promise<void> {
   const history = await loadHistory();
+  if (history.length === 0) throw new Error("sin_partidas");
   await shareJSON(buildPayload(history), `wild-score-historial-${dateTag()}.json`);
 }
 
@@ -40,7 +43,6 @@ export async function exportSingleGame(game: SavedGame): Promise<void> {
 
 async function shareJSON(content: string, filename: string): Promise<void> {
   if (Platform.OS === "web") {
-    // Web: trigger a download
     const blob = new Blob([content], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -51,22 +53,25 @@ async function shareJSON(content: string, filename: string): Promise<void> {
     return;
   }
 
-  const FileSystem = require("expo-file-system");
-  const Sharing = require("expo-sharing");
+  const cacheDir = FileSystem.cacheDirectory;
+  if (!cacheDir) throw new Error("sin_cache");
 
-  const path = `${FileSystem.cacheDirectory}${filename}`;
+  const path = `${cacheDir}${filename}`;
   await FileSystem.writeAsStringAsync(path, content, {
     encoding: FileSystem.EncodingType.UTF8,
   });
 
-  const canShare = await Sharing.isAvailableAsync();
-  if (!canShare) throw new Error("compartir_no_disponible");
-
-  await Sharing.shareAsync(path, {
-    mimeType: "application/json",
-    dialogTitle: filename,
-    UTI: "public.json",
-  });
+  if (Platform.OS === "ios") {
+    // iOS: Share API supports file URLs natively via UIActivityViewController
+    const result = await Share.share({ url: path, title: filename });
+    if (result.action === Share.dismissedAction) throw new Error("cancelado");
+  } else {
+    // Android: use expo-sharing which handles FileProvider content URIs
+    await Sharing.shareAsync(path, {
+      mimeType: "application/json",
+      dialogTitle: filename,
+    });
+  }
 }
 
 // ─── Import ──────────────────────────────────────────────────────────────────
@@ -76,12 +81,15 @@ export async function importGamesFromFile(): Promise<{ added: number; skipped: n
     return importFromWeb();
   }
 
-  const DocumentPicker = require("expo-document-picker");
-  const FileSystem = require("expo-file-system");
+  // Android only supports MIME types; iOS supports both MIME and UTIs
+  const types: string[] = Platform.OS === "android"
+    ? ["application/json", "text/plain", "*/*"]
+    : ["public.json", "application/json", "public.plain-text"];
 
   const result = await DocumentPicker.getDocumentAsync({
-    type: ["application/json", "public.json", "text/plain"],
+    type: types,
     copyToCacheDirectory: true,
+    multiple: false,
   });
 
   if (result.canceled || !result.assets?.[0]) {
@@ -114,7 +122,6 @@ function importFromWeb(): Promise<{ added: number; skipped: number }> {
         reject(err);
       }
     };
-    input.oncancel = () => reject(new Error("cancelado"));
     input.click();
   });
 }
