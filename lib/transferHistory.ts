@@ -128,6 +128,16 @@ function importFromWeb(): Promise<{ added: number; skipped: number }> {
   });
 }
 
+// ─── Import from URL (AirDrop / file opened externally) ──────────────────────
+
+export async function importFromURL(url: string): Promise<{ added: number; skipped: number }> {
+  const raw = await FileSystem.readAsStringAsync(url, {
+    encoding: FileSystem.EncodingType.UTF8,
+  });
+  const games = parsePayload(raw);
+  return mergeImportedGames(games);
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function dateTag(): string {

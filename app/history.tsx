@@ -75,7 +75,7 @@ export default function HistoryScreen() {
       Alert.alert("✅", s.importSuccess(added, skipped));
     } catch (err: any) {
       if (err?.message === "cancelado") return;
-      Alert.alert("Error", s.importError);
+      Alert.alert("Error detalle", String(err?.message ?? err));
     }
   }
 

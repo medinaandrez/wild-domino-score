@@ -22,6 +22,21 @@
     <string>1.1.0</string>
     <key>CFBundleSignature</key>
     <string>????</string>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleTypeName</key>
+        <string>Wild Score Backup</string>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+        <key>LSHandlerRank</key>
+        <string>Owner</string>
+        <key>LSItemContentTypes</key>
+        <array>
+          <string>public.json</string>
+        </array>
+      </dict>
+    </array>
     <key>CFBundleURLTypes</key>
     <array>
       <dict>
