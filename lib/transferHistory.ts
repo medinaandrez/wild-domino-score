@@ -87,13 +87,9 @@ export async function importGamesFromFile(): Promise<{ added: number; skipped: n
     return importFromWeb();
   }
 
-  // Android only supports MIME types; iOS supports both MIME and UTIs
-  const types: string[] = Platform.OS === "android"
-    ? ["application/json", "text/plain", "*/*"]
-    : ["public.json", "application/json", "public.plain-text"];
-
+  // Accept any file — content is validated when we try to parse it
   const result = await DocumentPicker.getDocumentAsync({
-    type: types,
+    type: ["*/*"],
     copyToCacheDirectory: true,
     multiple: false,
   });
