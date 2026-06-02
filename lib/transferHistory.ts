@@ -34,11 +34,11 @@ function parsePayload(raw: string): SavedGame[] {
 export async function exportAllGames(): Promise<void> {
   const history = await loadHistory();
   if (history.length === 0) throw new Error("sin_partidas");
-  await shareJSON(buildPayload(history), `wild-score-historial-${dateTag()}.json`);
+  await shareJSON(buildPayload(history), `wild-score-historial-${dateTag()}.wildscore`);
 }
 
 export async function exportSingleGame(game: SavedGame): Promise<void> {
-  await shareJSON(buildPayload([game]), `wild-score-partida-${dateTag()}.json`);
+  await shareJSON(buildPayload([game]), `wild-score-partida-${dateTag()}.wildscore`);
 }
 
 async function shareJSON(content: string, filename: string): Promise<void> {

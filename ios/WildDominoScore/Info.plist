@@ -28,13 +28,35 @@
         <key>CFBundleTypeName</key>
         <string>Wild Score Backup</string>
         <key>CFBundleTypeRole</key>
-        <string>Viewer</string>
+        <string>Editor</string>
         <key>LSHandlerRank</key>
         <string>Owner</string>
         <key>LSItemContentTypes</key>
         <array>
+          <string>com.spinnerscorekeeper.wildscore</string>
+        </array>
+      </dict>
+    </array>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+      <dict>
+        <key>UTTypeIdentifier</key>
+        <string>com.spinnerscorekeeper.wildscore</string>
+        <key>UTTypeDescription</key>
+        <string>Wild Score Backup</string>
+        <key>UTTypeConformsTo</key>
+        <array>
           <string>public.json</string>
         </array>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>wildscore</string>
+          </array>
+          <key>public.mime-type</key>
+          <string>application/json</string>
+        </dict>
       </dict>
     </array>
     <key>CFBundleURLTypes</key>
