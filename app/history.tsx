@@ -87,6 +87,14 @@ export default function HistoryScreen() {
         <Text style={{ fontSize: 52, marginBottom: 14 }}>📭</Text>
         <Text style={[st.emptyTitle, { color: t.text }]}>{s.noGames}</Text>
         <Text style={[st.emptySub, { color: t.muted }]}>{s.noGamesHint}</Text>
+        <TouchableOpacity
+          style={[st.importEmptyBtn, { backgroundColor: t.card, borderColor: t.border }]}
+          onPress={handleImport}
+          activeOpacity={0.7}
+        >
+          <Text style={{ fontSize: 20 }}>📥</Text>
+          <Text style={[{ fontSize: 15, fontWeight: "600" }, { color: t.text }]}>{s.importGames}</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -201,6 +209,7 @@ const st = StyleSheet.create({
   scorePlayer: { fontSize: 15 },
   scorePoints: { fontSize: 15, fontWeight: "700" },
   clearBtn: { borderWidth: 1, borderRadius: 18, paddingVertical: 16, alignItems: "center", marginTop: 8 },
+  importEmptyBtn: { flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderRadius: 18, paddingVertical: 16, paddingHorizontal: 28, marginTop: 24 },
   // Transfer
   transferRow: { flexDirection: "row", gap: 10 },
   transferBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 14, borderWidth: 1, paddingVertical: 14 },
