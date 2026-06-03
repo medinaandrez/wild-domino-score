@@ -52,6 +52,22 @@ class WildDominoLiveActivity: NSObject {
         }
     }
 
+    @objc func writeTempFile(
+        _ content: String,
+        filename: String,
+        resolver resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) {
+        let tempDir = NSTemporaryDirectory()
+        let path = (tempDir as NSString).appendingPathComponent(filename)
+        do {
+            try content.write(toFile: path, atomically: true, encoding: .utf8)
+            resolve("file://\(path)")
+        } catch {
+            reject("WRITE_ERROR", error.localizedDescription, error)
+        }
+    }
+
     @objc static func requiresMainQueueSetup() -> Bool { false }
 
     // MARK: - Private iOS 16.2+ implementations

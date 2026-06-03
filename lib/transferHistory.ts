@@ -1,7 +1,9 @@
-import { Platform, Share } from "react-native";
+import { NativeModules, Platform, Share } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
+
+const { WildDominoLiveActivity } = NativeModules;
 import { SavedGame } from "./types";
 import { loadHistory, mergeImportedGames } from "./storage";
 
@@ -53,7 +55,15 @@ async function shareJSON(content: string, filename: string): Promise<void> {
     return;
   }
 
-  // Write file to cache and share
+  if (Platform.OS === "ios") {
+    // iOS: write via native Swift module (NSTemporaryDirectory) then share as file
+    const path: string = await WildDominoLiveActivity.writeTempFile(content, filename);
+    const result = await Share.share({ url: path, title: filename });
+    if (result.action === Share.dismissedAction) throw new Error("cancelado");
+    return;
+  }
+
+  // Android: write to cache via expo-file-system and share via expo-sharing
   const cacheDir = FileSystem.cacheDirectory;
   if (!cacheDir) throw new Error("sin_cache");
 
@@ -61,18 +71,10 @@ async function shareJSON(content: string, filename: string): Promise<void> {
   await FileSystem.writeAsStringAsync(path, content, {
     encoding: FileSystem.EncodingType.UTF8,
   });
-
-  if (Platform.OS === "ios") {
-    // iOS: Share.share with url shares as a real file via UIActivityViewController
-    const result = await Share.share({ url: path, title: filename });
-    if (result.action === Share.dismissedAction) throw new Error("cancelado");
-  } else {
-    // Android: expo-sharing handles FileProvider content URIs
-    await Sharing.shareAsync(path, {
-      mimeType: "application/octet-stream",
-      dialogTitle: filename,
-    });
-  }
+  await Sharing.shareAsync(path, {
+    mimeType: "application/octet-stream",
+    dialogTitle: filename,
+  });
 }
 
 // ─── Import ──────────────────────────────────────────────────────────────────

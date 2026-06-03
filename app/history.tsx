@@ -54,7 +54,7 @@ export default function HistoryScreen() {
     } catch (err: any) {
       if (err?.message === "cancelado") return;
       if (err?.message === "sin_partidas") return;
-      Alert.alert("Error", s.exportError);
+      Alert.alert("Debug", String(err?.message ?? JSON.stringify(err)));
     }
   }
 
