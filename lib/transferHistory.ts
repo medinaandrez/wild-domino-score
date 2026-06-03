@@ -96,10 +96,7 @@ export async function importGamesFromFile(): Promise<{ added: number; skipped: n
   }
 
   const uri = result.assets[0].uri;
-  const raw = await FileSystem.readAsStringAsync(uri, {
-    encoding: FileSystem.EncodingType.UTF8,
-  });
-
+  const raw = await readFileAsText(uri);
   const games = parsePayload(raw);
   return mergeImportedGames(games);
 }
@@ -128,11 +125,24 @@ function importFromWeb(): Promise<{ added: number; skipped: number }> {
 // ─── Import from URL (AirDrop / file opened externally) ──────────────────────
 
 export async function importFromURL(url: string): Promise<{ added: number; skipped: number }> {
-  const raw = await FileSystem.readAsStringAsync(url, {
-    encoding: FileSystem.EncodingType.UTF8,
-  });
+  const raw = await readFileAsText(url);
   const games = parsePayload(raw);
   return mergeImportedGames(games);
+}
+
+// ─── File reading helper ──────────────────────────────────────────────────────
+
+async function readFileAsText(uri: string): Promise<string> {
+  // Use fetch for file:// URIs — works on iOS and Android without expo-file-system
+  if (uri.startsWith("file://") || uri.startsWith("content://")) {
+    const response = await fetch(uri);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.text();
+  }
+  // Fallback: expo-file-system for other URI schemes
+  return FileSystem.readAsStringAsync(uri, {
+    encoding: FileSystem.EncodingType.UTF8,
+  });
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
