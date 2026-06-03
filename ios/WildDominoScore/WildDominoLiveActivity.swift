@@ -1,5 +1,6 @@
 import ActivityKit
 import Foundation
+import React
 
 @objc(WildDominoLiveActivity)
 class WildDominoLiveActivity: NSObject {
