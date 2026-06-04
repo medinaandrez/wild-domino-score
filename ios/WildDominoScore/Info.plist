@@ -46,7 +46,7 @@
         <string>Wild Score Backup</string>
         <key>UTTypeConformsTo</key>
         <array>
-          <string>public.json</string>
+          <string>public.data</string>
         </array>
         <key>UTTypeTagSpecification</key>
         <dict>
@@ -54,8 +54,6 @@
           <array>
             <string>wildscore</string>
           </array>
-          <key>public.mime-type</key>
-          <string>application/json</string>
         </dict>
       </dict>
     </array>
