@@ -22,6 +22,10 @@
     <string>1.1.0</string>
     <key>CFBundleSignature</key>
     <string>????</string>
+    <key>LSSupportsOpeningDocumentsInPlace</key>
+    <true/>
+    <key>UISupportsDocumentBrowser</key>
+    <false/>
     <key>CFBundleDocumentTypes</key>
     <array>
       <dict>

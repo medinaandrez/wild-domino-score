@@ -3,7 +3,7 @@ import Constants from "expo-constants";
 import { Alert, Linking, Platform, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { useSettings } from "@/lib/SettingsContext";
 import { colors, useTheme } from "@/lib/theme";
-import { Language, RoundCount } from "@/lib/settings";
+import { Language, RoundCount, ThemePref } from "@/lib/settings";
 
 const SITE_URL = "https://spinner-scorekeeper.vercel.app";
 const REPO_URL = "https://github.com/medinaandrez/wild-domino-score";
@@ -63,6 +63,15 @@ export default function SettingsScreen() {
     ]);
   }
 
+  function pickTheme() {
+    Alert.alert(s.themeLabel, undefined, [
+      { text: s.themeAuto, onPress: () => updateSetting("theme", "auto" as ThemePref) },
+      { text: s.themeLight, onPress: () => updateSetting("theme", "light" as ThemePref) },
+      { text: s.themeDark, onPress: () => updateSetting("theme", "dark" as ThemePref) },
+      { text: s.cancel, style: "cancel" },
+    ]);
+  }
+
   function pickRounds() {
     Alert.alert(s.roundsLabel, undefined, [
       { text: s.rounds5, onPress: () => updateSetting("rounds", 5 as RoundCount) },
@@ -74,6 +83,7 @@ export default function SettingsScreen() {
 
   const langValue = settings.language === "es" ? s.langEs : s.langEn;
   const roundsValue = s.roundsHint(settings.rounds);
+  const themeValue = settings.theme === "auto" ? s.themeAuto : settings.theme === "light" ? s.themeLight : s.themeDark;
 
   return (
     <View style={[st.flex, { backgroundColor: t.bg }]}>
@@ -108,6 +118,21 @@ export default function SettingsScreen() {
           )}
 
           <View style={[st.divider, { backgroundColor: t.border }]} />
+
+          {!isWeb && (
+            <>
+              {/* Theme */}
+              <TouchableOpacity style={st.row} onPress={pickTheme} activeOpacity={0.7}>
+                <Text style={[st.rowLabel, { color: t.text }]}>{s.themeLabel}</Text>
+                <View style={st.rowRight}>
+                  <Text style={[st.rowValue, { color: t.muted }]}>{themeValue}</Text>
+                  <Text style={[st.chevron, { color: t.muted }]}>›</Text>
+                </View>
+              </TouchableOpacity>
+
+              <View style={[st.divider, { backgroundColor: t.border }]} />
+            </>
+          )}
 
           {/* Rounds */}
           {isWeb ? (
