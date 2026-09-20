@@ -24,11 +24,46 @@ function buildPayload(games: SavedGame[]): string {
   return JSON.stringify(payload, null, 2);
 }
 
+const MAX_GAMES = 5000;
+const MAX_PLAYERS = 20;
+const MAX_STRING_LEN = 200;
+
+function isValidString(v: unknown, maxLen = MAX_STRING_LEN): v is string {
+  return typeof v === "string" && v.length > 0 && v.length <= maxLen;
+}
+
+function isValidSavedGame(g: unknown): g is SavedGame {
+  if (typeof g !== "object" || g === null) return false;
+  const game = g as Record<string, unknown>;
+
+  if (!isValidString(game.id)) return false;
+  if (typeof game.date !== "string" || isNaN(Date.parse(game.date))) return false;
+  if (!isValidString(game.winner)) return false;
+
+  if (!Array.isArray(game.playerNames) || game.playerNames.length === 0 || game.playerNames.length > MAX_PLAYERS) return false;
+  if (!game.playerNames.every((n) => isValidString(n))) return false;
+
+  if (!Array.isArray(game.finalScores) || game.finalScores.length === 0 || game.finalScores.length > MAX_PLAYERS) return false;
+  if (!game.finalScores.every((s) => {
+    if (typeof s !== "object" || s === null) return false;
+    const score = s as Record<string, unknown>;
+    return isValidString(score.name) && typeof score.total === "number" && Number.isFinite(score.total);
+  })) return false;
+
+  return true;
+}
+
 function parsePayload(raw: string): SavedGame[] {
   const parsed = JSON.parse(raw);
-  if (Array.isArray(parsed)) return parsed as SavedGame[];
-  if (parsed?.games && Array.isArray(parsed.games)) return parsed.games as SavedGame[];
-  throw new Error("formato_invalido");
+  const games = Array.isArray(parsed) ? parsed
+    : parsed?.games && Array.isArray(parsed.games) ? parsed.games
+    : null;
+
+  if (!games) throw new Error("formato_invalido");
+  if (games.length === 0 || games.length > MAX_GAMES) throw new Error("formato_invalido");
+  if (!games.every(isValidSavedGame)) throw new Error("formato_invalido");
+
+  return games as SavedGame[];
 }
 
 // ─── Export ──────────────────────────────────────────────────────────────────

@@ -59,6 +59,14 @@ class WildDominoLiveActivity: NSObject {
         resolver resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) {
+        guard !filename.isEmpty,
+              !filename.contains("/"),
+              filename != "..",
+              filename == (filename as NSString).lastPathComponent
+        else {
+            reject("INVALID_FILENAME", "filename must be a single path component", nil)
+            return
+        }
         let tempDir = NSTemporaryDirectory()
         let path = (tempDir as NSString).appendingPathComponent(filename)
         do {
