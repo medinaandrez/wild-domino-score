@@ -1,7 +1,7 @@
 import { router, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Alert, Linking, TouchableOpacity, Text } from "react-native";
+import { Alert, Linking, Platform, TouchableOpacity, Text } from "react-native";
 import { GameProvider } from "@/lib/GameContext";
 import { SettingsProvider } from "@/lib/SettingsContext";
 import { useSettings } from "@/lib/SettingsContext";
@@ -37,6 +37,15 @@ function AppNavigator() {
     const sub = Linking.addEventListener("url", ({ url }) => handleIncomingURL(url));
     return () => sub.remove();
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const root = document.documentElement;
+    root.style.backgroundColor = t.bg;
+    root.style.colorScheme = isDark ? "dark" : "light";
+    document.body.style.backgroundColor = t.bg;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", t.bg);
+  }, [isDark, t.bg]);
 
   return (
     <>

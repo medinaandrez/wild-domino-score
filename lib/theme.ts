@@ -1,6 +1,13 @@
-import { useContext } from "react";
+import { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { Platform, useColorScheme } from "react-native";
 import { SettingsContext } from "./SettingsContext";
+
+// The web build is pre-rendered to static HTML (always light), so on web every
+// component must first render light to match that HTML and only then switch to the
+// real scheme. A layout effect does the switch before the browser paints, so there
+// is no flash when screens mount later; a module-level flag would be wrong here
+// because Suspense-wrapped screens hydrate after it flips.
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export const colors = {
   amber: "#f59e0b",
@@ -42,8 +49,11 @@ export function useTheme() {
   // before the provider mounts, so we fall back to "auto".
   const ctx = useContext(SettingsContext);
   const themePref = ctx?.settings?.theme ?? "auto";
-  // Web always uses light theme — dark-mode CSS variables are not wired up.
-  const isDark = Platform.OS === "web"
+  const [hydrated, setHydrated] = useState(Platform.OS !== "web");
+  useIsomorphicLayoutEffect(() => {
+    setHydrated(true);
+  }, []);
+  const isDark = !hydrated
     ? false
     : themePref === "auto" ? scheme === "dark" : themePref === "dark";
   const t = isDark ? colors.dark : colors.light;

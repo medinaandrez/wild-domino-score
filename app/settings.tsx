@@ -88,47 +88,6 @@ export default function SettingsScreen() {
         <Text style={[st.sectionTitle, { color: t.muted }]}>{s.preferencesSection.toUpperCase()}</Text>
         <View style={[st.group, { backgroundColor: t.card, borderColor: t.border }]}>
 
-          {/* Language */}
-          {isWeb ? (
-            <View style={[st.row, { flexDirection: "column", alignItems: "stretch" }]}>
-              <Text style={[st.rowLabel, { color: t.text }]}>{s.languageLabel}</Text>
-              <SelectPicker
-                t={t}
-                value={settings.language}
-                onChange={(v) => updateSetting("language", v as Language)}
-                options={[
-                  { label: s.langEs, value: "es" as Language },
-                  { label: s.langEn, value: "en" as Language },
-                ]}
-              />
-            </View>
-          ) : (
-            <TouchableOpacity style={st.row} onPress={pickLanguage} activeOpacity={0.7}>
-              <Text style={[st.rowLabel, { color: t.text }]}>{s.languageLabel}</Text>
-              <View style={st.rowRight}>
-                <Text style={[st.rowValue, { color: t.muted }]}>{langValue}</Text>
-                <Text style={[st.chevron, { color: t.muted }]}>›</Text>
-              </View>
-            </TouchableOpacity>
-          )}
-
-          <View style={[st.divider, { backgroundColor: t.border }]} />
-
-          {!isWeb && (
-            <>
-              {/* Theme */}
-              <TouchableOpacity style={st.row} onPress={pickTheme} activeOpacity={0.7}>
-                <Text style={[st.rowLabel, { color: t.text }]}>{s.themeLabel}</Text>
-                <View style={st.rowRight}>
-                  <Text style={[st.rowValue, { color: t.muted }]}>{themeValue}</Text>
-                  <Text style={[st.chevron, { color: t.muted }]}>›</Text>
-                </View>
-              </TouchableOpacity>
-
-              <View style={[st.divider, { backgroundColor: t.border }]} />
-            </>
-          )}
-
           {/* Rounds */}
           {isWeb ? (
             <View style={[st.row, { flexDirection: "column", alignItems: "stretch" }]}>
@@ -149,6 +108,59 @@ export default function SettingsScreen() {
               <Text style={[st.rowLabel, { color: t.text }]}>{s.roundsLabel}</Text>
               <View style={st.rowRight}>
                 <Text style={[st.rowValue, { color: t.muted }]}>{roundsValue}</Text>
+                <Text style={[st.chevron, { color: t.muted }]}>›</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
+          <View style={[st.divider, { backgroundColor: t.border }]} />
+
+          {/* Theme */}
+          {isWeb ? (
+            <View style={[st.row, { flexDirection: "column", alignItems: "stretch" }]}>
+              <Text style={[st.rowLabel, { color: t.text }]}>{s.themeLabel}</Text>
+              <SelectPicker
+                t={t}
+                value={settings.theme}
+                onChange={(v) => updateSetting("theme", v as ThemePref)}
+                options={[
+                  { label: s.themeAuto, value: "auto" as ThemePref },
+                  { label: s.themeLight, value: "light" as ThemePref },
+                  { label: s.themeDark, value: "dark" as ThemePref },
+                ]}
+              />
+            </View>
+          ) : (
+            <TouchableOpacity style={st.row} onPress={pickTheme} activeOpacity={0.7}>
+              <Text style={[st.rowLabel, { color: t.text }]}>{s.themeLabel}</Text>
+              <View style={st.rowRight}>
+                <Text style={[st.rowValue, { color: t.muted }]}>{themeValue}</Text>
+                <Text style={[st.chevron, { color: t.muted }]}>›</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
+          <View style={[st.divider, { backgroundColor: t.border }]} />
+
+          {/* Language */}
+          {isWeb ? (
+            <View style={[st.row, { flexDirection: "column", alignItems: "stretch" }]}>
+              <Text style={[st.rowLabel, { color: t.text }]}>{s.languageLabel}</Text>
+              <SelectPicker
+                t={t}
+                value={settings.language}
+                onChange={(v) => updateSetting("language", v as Language)}
+                options={[
+                  { label: s.langEs, value: "es" as Language },
+                  { label: s.langEn, value: "en" as Language },
+                ]}
+              />
+            </View>
+          ) : (
+            <TouchableOpacity style={st.row} onPress={pickLanguage} activeOpacity={0.7}>
+              <Text style={[st.rowLabel, { color: t.text }]}>{s.languageLabel}</Text>
+              <View style={st.rowRight}>
+                <Text style={[st.rowValue, { color: t.muted }]}>{langValue}</Text>
                 <Text style={[st.chevron, { color: t.muted }]}>›</Text>
               </View>
             </TouchableOpacity>

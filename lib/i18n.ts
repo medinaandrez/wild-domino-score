@@ -116,7 +116,7 @@ const es = {
   themeAuto: "Automático",
   themeLight: "Claro",
   themeDark: "Oscuro",
-  roundsLabel: "Duración de la partida",
+  roundsLabel: "Duración",
   roundsHint: (n: number) => `${n} rondas`,
   rounds5: "5 rondas",
   rounds7: "7 rondas",
