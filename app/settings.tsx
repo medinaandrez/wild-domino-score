@@ -10,7 +10,8 @@ const REPO_URL = "https://github.com/medinaandrez/wild-domino-score";
 
 const APP_VERSION = Constants.expoConfig?.version ?? "—";
 
-function InlinePicker<T extends string | number>({
+// Web only: a native <select> (opens the iOS wheel picker on iPhone Safari).
+function SelectPicker<T extends string | number>({
   options, value, onChange, t,
 }: {
   options: { label: string; value: T }[];
@@ -19,36 +20,30 @@ function InlinePicker<T extends string | number>({
   t: ReturnType<typeof useTheme>["t"];
 }) {
   return (
-    <View style={ip.row}>
-      {options.map((opt, i) => {
-        const active = opt.value === value;
-        return (
-          <TouchableOpacity
-            key={String(opt.value)}
-            onPress={() => onChange(opt.value)}
-            style={[
-              ip.btn,
-              i === 0 && ip.btnFirst,
-              i === options.length - 1 && ip.btnLast,
-              active ? { backgroundColor: colors.amber } : { backgroundColor: t.cardAlt, borderColor: t.border },
-            ]}
-            activeOpacity={0.7}
-          >
-            <Text style={[ip.label, { color: active ? colors.onAmber : t.text }]}>{opt.label}</Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+    <select
+      value={String(value)}
+      onChange={(e) => {
+        const next = options.find((o) => String(o.value) === e.target.value);
+        if (next) onChange(next.value);
+      }}
+      style={{
+        width: "100%",
+        marginTop: 10,
+        marginBottom: 4,
+        padding: "10px 12px",
+        fontSize: 16,
+        borderRadius: 10,
+        border: `1px solid ${t.border}`,
+        backgroundColor: t.cardAlt,
+        color: t.text,
+      }}
+    >
+      {options.map((opt) => (
+        <option key={String(opt.value)} value={String(opt.value)}>{opt.label}</option>
+      ))}
+    </select>
   );
 }
-
-const ip = StyleSheet.create({
-  row: { flexDirection: "row", marginTop: 10, marginBottom: 4 },
-  btn: { flex: 1, paddingVertical: 10, alignItems: "center", borderWidth: 1, borderColor: colors.amber },
-  btnFirst: { borderTopLeftRadius: 10, borderBottomLeftRadius: 10 },
-  btnLast: { borderTopRightRadius: 10, borderBottomRightRadius: 10 },
-  label: { fontSize: 14, fontWeight: "600" },
-});
 
 export default function SettingsScreen() {
   const { t } = useTheme();
@@ -95,9 +90,9 @@ export default function SettingsScreen() {
 
           {/* Language */}
           {isWeb ? (
-            <View style={[st.row, { flexDirection: "column", alignItems: "flex-start" }]}>
+            <View style={[st.row, { flexDirection: "column", alignItems: "stretch" }]}>
               <Text style={[st.rowLabel, { color: t.text }]}>{s.languageLabel}</Text>
-              <InlinePicker
+              <SelectPicker
                 t={t}
                 value={settings.language}
                 onChange={(v) => updateSetting("language", v as Language)}
@@ -136,9 +131,9 @@ export default function SettingsScreen() {
 
           {/* Rounds */}
           {isWeb ? (
-            <View style={[st.row, { flexDirection: "column", alignItems: "flex-start" }]}>
+            <View style={[st.row, { flexDirection: "column", alignItems: "stretch" }]}>
               <Text style={[st.rowLabel, { color: t.text }]}>{s.roundsLabel}</Text>
-              <InlinePicker
+              <SelectPicker
                 t={t}
                 value={settings.rounds}
                 onChange={(v) => updateSetting("rounds", v as RoundCount)}
